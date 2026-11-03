@@ -1,0 +1,19 @@
+{
+ "items": [
+  {
+   "media": {
+    "code": "REEL1",
+    "pk": "111",
+    "taken_at": 1730000000,
+    "media_type": 2,
+    "product_type": "clips",
+    "like_count": 510,
+    "comment_count": 21,
+    "play_count": 10500,
+    "user": {
+     "username": "prueba"
+    }
+   }
+  }
+ ]
+}

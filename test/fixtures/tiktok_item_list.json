@@ -1,0 +1,78 @@
+{
+ "itemList": [
+  {
+   "id": "7300000000000000001",
+   "desc": "video uno",
+   "createTime": 1730000000,
+   "author": {
+    "uniqueId": "tester"
+   },
+   "stats": {
+    "playCount": 5000,
+    "diggCount": 300,
+    "commentCount": 10,
+    "shareCount": 5,
+    "collectCount": 7
+   },
+   "statsV2": {
+    "playCount": "5000",
+    "diggCount": "300",
+    "commentCount": "10",
+    "shareCount": "5",
+    "collectCount": "7"
+   },
+   "video": {
+    "cover": "https://p16-sign.tiktokcdn.com/v1.jpeg",
+    "playAddr": "https://v16-webapp-prime.tiktok.com/video/tos/abc/?mime_type=video_mp4"
+   }
+  },
+  {
+   "id": "7300000000000000002",
+   "desc": "fotos",
+   "createTime": "1730100000",
+   "author": {
+    "uniqueId": "tester"
+   },
+   "stats": {
+    "playCount": 90000,
+    "diggCount": 1200,
+    "commentCount": 40,
+    "shareCount": 15,
+    "collectCount": 30
+   },
+   "imagePost": {
+    "images": [
+     {
+      "imageURL": {
+       "urlList": [
+        "https://p16-sign.tiktokcdn.com/p1.jpeg"
+       ]
+      }
+     },
+     {
+      "imageURL": {
+       "urlList": [
+        "https://p16-sign.tiktokcdn.com/p2.jpeg"
+       ]
+      }
+     }
+    ]
+   }
+  }
+ ],
+ "cursor": "123",
+ "hasMore": true,
+ "userInfo": {
+  "user": {
+   "id": "6800000000000000000",
+   "uniqueId": "tester",
+   "createTime": 1500000000
+  },
+  "stats": {
+   "followerCount": 100,
+   "heartCount": 5000,
+   "diggCount": 40,
+   "videoCount": 2
+  }
+ }
+}

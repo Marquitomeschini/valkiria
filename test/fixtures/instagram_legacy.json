@@ -1,0 +1,38 @@
+{
+ "data": {
+  "user": {
+   "edge_owner_to_timeline_media": {
+    "edges": [
+     {
+      "node": {
+       "__typename": "GraphVideo",
+       "shortcode": "OLD1",
+       "is_video": true,
+       "video_view_count": 3000,
+       "edge_media_preview_like": {
+        "count": 77
+       },
+       "edge_media_to_comment": {
+        "count": 7
+       },
+       "taken_at_timestamp": 1600000000,
+       "thumbnail_src": "https://scontent.cdninstagram.com/old1.jpg",
+       "owner": {
+        "username": "prueba"
+       },
+       "edge_media_to_caption": {
+        "edges": [
+         {
+          "node": {
+           "text": "viejo"
+          }
+         }
+        ]
+       }
+      }
+     }
+    ]
+   }
+  }
+ }
+}

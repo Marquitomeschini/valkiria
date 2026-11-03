@@ -1,0 +1,307 @@
+{
+ "data": {
+  "user": {
+   "result": {
+    "timeline": {
+     "timeline": {
+      "instructions": [
+       {
+        "type": "TimelineAddEntries",
+        "entries": [
+         {
+          "entryId": "tweet-1",
+          "content": {
+           "entryType": "TimelineTimelineItem",
+           "itemContent": {
+            "itemType": "TimelineTweet",
+            "tweet_results": {
+             "result": {
+              "__typename": "Tweet",
+              "rest_id": "1",
+              "core": {
+               "user_results": {
+                "result": {
+                 "__typename": "User",
+                 "rest_id": "u1",
+                 "core": {
+                  "screen_name": "pepe"
+                 },
+                 "legacy": {
+                  "screen_name": "pepe",
+                  "favourites_count": 10,
+                  "created_at": "Mon Jan 01 00:00:00 +0000 2018"
+                 }
+                }
+               }
+              },
+              "legacy": {
+               "full_text": "hola con foto",
+               "created_at": "Wed Oct 30 15:04:05 +0000 2024",
+               "favorite_count": 10,
+               "reply_count": 2,
+               "retweet_count": 3,
+               "quote_count": 1,
+               "bookmark_count": 4,
+               "entities": {},
+               "extended_entities": {
+                "media": [
+                 {
+                  "type": "photo",
+                  "media_url_https": "https://pbs.twimg.com/media/a.jpg"
+                 }
+                ]
+               }
+              },
+              "views": {
+               "count": "1000",
+               "state": "EnabledWithCount"
+              },
+              "quoted_status_result": {
+               "result": {
+                "__typename": "Tweet",
+                "rest_id": "999",
+                "core": {
+                 "user_results": {
+                  "result": {
+                   "__typename": "User",
+                   "rest_id": "u1",
+                   "core": {
+                    "screen_name": "pepe"
+                   },
+                   "legacy": {
+                    "screen_name": "pepe",
+                    "favourites_count": 10,
+                    "created_at": "Mon Jan 01 00:00:00 +0000 2018"
+                   }
+                  }
+                 }
+                },
+                "legacy": {
+                 "full_text": "citado",
+                 "created_at": "Wed Oct 30 15:04:05 +0000 2024",
+                 "favorite_count": 5000,
+                 "reply_count": 2,
+                 "retweet_count": 3,
+                 "quote_count": 1,
+                 "bookmark_count": 4,
+                 "entities": {}
+                },
+                "views": {
+                 "count": "99999",
+                 "state": "EnabledWithCount"
+                }
+               }
+              }
+             }
+            }
+           }
+          }
+         },
+         {
+          "entryId": "tweet-2",
+          "content": {
+           "entryType": "TimelineTimelineItem",
+           "itemContent": {
+            "itemType": "TimelineTweet",
+            "tweet_results": {
+             "result": {
+              "__typename": "Tweet",
+              "rest_id": "2",
+              "core": {
+               "user_results": {
+                "result": {
+                 "__typename": "User",
+                 "rest_id": "u1",
+                 "core": {
+                  "screen_name": "pepe"
+                 },
+                 "legacy": {
+                  "screen_name": "pepe",
+                  "favourites_count": 10,
+                  "created_at": "Mon Jan 01 00:00:00 +0000 2018"
+                 }
+                }
+               }
+              },
+              "legacy": {
+               "full_text": "RT @otro: original de otro",
+               "created_at": "Wed Oct 30 15:04:05 +0000 2024",
+               "favorite_count": 0,
+               "reply_count": 2,
+               "retweet_count": 3,
+               "quote_count": 1,
+               "bookmark_count": 4,
+               "entities": {},
+               "retweeted_status_result": {
+                "result": {
+                 "__typename": "Tweet",
+                 "rest_id": "3",
+                 "core": {
+                  "user_results": {
+                   "result": {
+                    "__typename": "User",
+                    "rest_id": "u1",
+                    "core": {
+                     "screen_name": "pepe"
+                    },
+                    "legacy": {
+                     "screen_name": "pepe",
+                     "favourites_count": 10,
+                     "created_at": "Mon Jan 01 00:00:00 +0000 2018"
+                    }
+                   }
+                  }
+                 },
+                 "legacy": {
+                  "full_text": "original de otro",
+                  "created_at": "Wed Oct 30 15:04:05 +0000 2024",
+                  "favorite_count": 700,
+                  "reply_count": 2,
+                  "retweet_count": 3,
+                  "quote_count": 1,
+                  "bookmark_count": 4,
+                  "entities": {}
+                 },
+                 "views": {
+                  "count": "20000",
+                  "state": "EnabledWithCount"
+                 }
+                }
+               }
+              }
+             }
+            }
+           }
+          }
+         },
+         {
+          "entryId": "tweet-4",
+          "content": {
+           "entryType": "TimelineTimelineItem",
+           "itemContent": {
+            "itemType": "TimelineTweet",
+            "tweet_results": {
+             "result": {
+              "__typename": "TweetWithVisibilityResults",
+              "tweet": {
+               "__typename": "Tweet",
+               "rest_id": "4",
+               "core": {
+                "user_results": {
+                 "result": {
+                  "__typename": "User",
+                  "rest_id": "u1",
+                  "core": {
+                   "screen_name": "pepe"
+                  },
+                  "legacy": {
+                   "screen_name": "pepe",
+                   "favourites_count": 10,
+                   "created_at": "Mon Jan 01 00:00:00 +0000 2018"
+                  }
+                 }
+                }
+               },
+               "legacy": {
+                "full_text": "video",
+                "created_at": "Wed Oct 30 15:04:05 +0000 2024",
+                "favorite_count": 50,
+                "reply_count": 2,
+                "retweet_count": 3,
+                "quote_count": 1,
+                "bookmark_count": 4,
+                "entities": {},
+                "extended_entities": {
+                 "media": [
+                  {
+                   "type": "video",
+                   "media_url_https": "https://pbs.twimg.com/ext_tw_video_thumb/v.jpg",
+                   "video_info": {
+                    "variants": [
+                     {
+                      "content_type": "application/x-mpegURL",
+                      "url": "https://video.twimg.com/v.m3u8"
+                     },
+                     {
+                      "bitrate": 632000,
+                      "content_type": "video/mp4",
+                      "url": "https://video.twimg.com/ext_tw_video/1/pu/vid/480x270/low.mp4?tag=12"
+                     },
+                     {
+                      "bitrate": 2176000,
+                      "content_type": "video/mp4",
+                      "url": "https://video.twimg.com/ext_tw_video/1/pu/vid/1280x720/high.mp4?tag=12"
+                     }
+                    ]
+                   }
+                  }
+                 ]
+                }
+               },
+               "views": {
+                "count": "8000",
+                "state": "EnabledWithCount"
+               }
+              }
+             }
+            }
+           }
+          }
+         },
+         {
+          "entryId": "promoted-5",
+          "content": {
+           "entryType": "TimelineTimelineItem",
+           "itemContent": {
+            "itemType": "TimelineTweet",
+            "tweet_results": {
+             "result": {
+              "__typename": "Tweet",
+              "rest_id": "5",
+              "core": {
+               "user_results": {
+                "result": {
+                 "__typename": "User",
+                 "rest_id": "u1",
+                 "core": {
+                  "screen_name": "pepe"
+                 },
+                 "legacy": {
+                  "screen_name": "pepe",
+                  "favourites_count": 10,
+                  "created_at": "Mon Jan 01 00:00:00 +0000 2018"
+                 }
+                }
+               }
+              },
+              "legacy": {
+               "full_text": "anuncio",
+               "created_at": "Wed Oct 30 15:04:05 +0000 2024",
+               "favorite_count": 1,
+               "reply_count": 2,
+               "retweet_count": 3,
+               "quote_count": 1,
+               "bookmark_count": 4,
+               "entities": {}
+              },
+              "views": {
+               "count": "1",
+               "state": "EnabledWithCount"
+              }
+             }
+            },
+            "promotedMetadata": {
+             "advertiser_results": {}
+            }
+           }
+          }
+         }
+        ]
+       }
+      ]
+     }
+    }
+   }
+  }
+ }
+}

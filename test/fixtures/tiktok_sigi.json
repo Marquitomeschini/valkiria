@@ -1,0 +1,16 @@
+{
+ "ItemModule": {
+  "7300000000000000003": {
+   "id": "7300000000000000003",
+   "desc": "ssr",
+   "createTime": 1729000000,
+   "author": "tester",
+   "stats": {
+    "playCount": 42,
+    "diggCount": 4,
+    "commentCount": 0,
+    "shareCount": 0
+   }
+  }
+ }
+}

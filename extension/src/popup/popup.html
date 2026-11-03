@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Valkiria</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <img src="../../icons/icon32.png" width="20" height="20" alt="">
+    <h1>Valkiria</h1>
+    <span id="where" class="where"></span>
+  </header>
+
+  <div id="updated" class="notice ok" hidden></div>
+
+  <div id="unsupported" class="notice" hidden>
+    Abrí un perfil, una búsqueda o un hashtag de <b>Instagram, TikTok, X o Facebook</b> y volvé a tocar el ícono.
+    <small>Si la página ya estaba abierta antes de instalar la extensión, recargala.</small>
+  </div>
+
+  <main id="main">
+    <section class="box">
+      <div class="label">Filtros</div>
+      <div class="seg" role="tablist">
+        <button id="modePosts" role="tab" data-mode="posts"><svg viewBox="0 0 24 24"><path d="M4 4h7v7H4V4zm9 0h7v7h-7V4zM4 13h7v7H4v-7zm9 0h7v7h-7v-7z"/></svg>Publicaciones</button>
+        <button id="modeDate" role="tab" data-mode="date"><svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/></svg>Fecha</button>
+      </div>
+      <select id="postsSel" aria-label="Cantidad de publicaciones">
+        <option value="0">Todas las publicaciones</option>
+        <option value="50">Últimas 50</option>
+        <option value="100">Últimas 100</option>
+        <option value="250">Últimas 250</option>
+        <option value="500">Últimas 500</option>
+        <option value="1000">Últimas 1000</option>
+      </select>
+      <select id="dateSel" aria-label="Rango de fechas">
+        <option value="week">De la última semana</option>
+        <option value="month">Del último mes</option>
+        <option value="3m">De los últimos 3 meses</option>
+        <option value="6m">De los últimos 6 meses</option>
+        <option value="year">Del último año</option>
+        <option value="all">Todas las publicaciones</option>
+        <option value="custom">Fecha personalizada…</option>
+      </select>
+      <div id="custom" class="custom" hidden>
+        <label>Desde <input id="from" type="date"></label>
+        <label>Hasta <input id="to" type="date"></label>
+      </div>
+    </section>
+
+    <section class="box">
+      <div class="label">Ordenar por</div>
+      <div class="list" id="sorts">
+        <button data-sort="likes"><svg viewBox="0 0 24 24"><path d="M16.5 3c-1.74 0-3.41.81-4.5 2.09C10.91 3.81 9.24 3 7.5 3 4.42 3 2 5.42 2 8.5c0 3.78 3.4 6.86 8.55 11.54L12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3zm-4.4 15.55l-.1.1-.1-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04.99 3.57 2.36h1.87C13.46 5.99 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05z"/></svg>Likes</button>
+        <button data-sort="views"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>Vistas</button>
+        <button data-sort="outlier" title="Cuántas veces supera a la publicación típica del perfil: vistas ÷ mediana de vistas (likes si no hay vistas). 3x = triplica lo normal."><svg viewBox="0 0 24 24"><path d="M11 21h-1l1-7H7.5c-.58 0-.57-.32-.38-.66l.07-.12C8.48 10.94 10.42 7.54 13 3h1l-1 7h3.5c.49 0 .56.33.47.51l-.07.15C12.96 17.55 11 21 11 21z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>Outlier score<span class="info" aria-hidden="true">i</span></button>
+        <button data-sort="comments"><svg viewBox="0 0 24 24"><path d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zm0 14H5.17L4 17.17V4h16v12z"/></svg>Comentarios</button>
+        <button data-sort="shares"><svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>Compartidos</button>
+        <button data-sort="engagement" title="(likes + comentarios) ÷ vistas"><svg viewBox="0 0 24 24"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>Engagement</button>
+        <button data-sort="oldest"><svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>Más antiguas</button>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span id="status" class="status"></span>
+    <button id="show" class="link" hidden>Ver resultados</button>
+    <button id="stop" class="link" hidden>Detener</button>
+  </footer>
+  <div class="diagrow" id="diagrow" hidden>
+    <button id="diag" class="link small" title="Copia la estructura de lo que mandó la red (nombres de campos, sin contenido) para reportar un problema">Copiar diagnóstico</button>
+    <span id="diagmsg"></span>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

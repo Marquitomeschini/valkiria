@@ -1,0 +1,57 @@
+{
+ "data": {
+  "xdt_api__v1__clips__user__connection_v2": {
+   "edges": [
+    {
+     "node": {
+      "media": {
+       "pk": "3111",
+       "id": "3111_99",
+       "code": "DReelA1",
+       "media_type": 2,
+       "product_type": "clips",
+       "play_count": 45000,
+       "like_count": 1200,
+       "comment_count": 33,
+       "like_and_view_counts_disabled": false,
+       "image_versions2": {
+        "candidates": [
+         {
+          "url": "https://scontent.cdninstagram.com/ra.jpg",
+          "width": 360,
+          "height": 640
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "node": {
+      "media": {
+       "pk": "3112",
+       "id": "3112_99",
+       "code": "DReelB2",
+       "media_type": 2,
+       "product_type": "clips",
+       "play_count": 91000,
+       "like_count": 800,
+       "comment_count": 12,
+       "image_versions2": {
+        "candidates": [
+         {
+          "url": "https://scontent.cdninstagram.com/rb.jpg"
+         }
+        ]
+       }
+      }
+     }
+    }
+   ],
+   "page_info": {
+    "has_next_page": true,
+    "end_cursor": "x"
+   }
+  }
+ }
+}

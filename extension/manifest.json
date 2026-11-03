@@ -1,0 +1,84 @@
+{
+  "manifest_version": 3,
+  "name": "Valkiria",
+  "version": "0.6.0",
+  "description": "Elige a las mejores publicaciones de Instagram, TikTok, X y Facebook: ordená por vistas, likes, comentarios u outlier score, filtrá, exportá y descargá.",
+  "minimum_chrome_version": "111",
+  "permissions": [
+    "storage",
+    "downloads",
+    "offscreen",
+    "declarativeNetRequestWithHostAccess",
+    "alarms"
+  ],
+  "action": {
+    "default_title": "Valkiria: elegí las mejores publicaciones",
+    "default_popup": "src/popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.instagram.com/*",
+        "https://www.tiktok.com/*",
+        "https://x.com/*",
+        "https://twitter.com/*",
+        "https://www.facebook.com/*",
+        "https://web.facebook.com/*"
+      ],
+      "js": [
+        "src/core/util.js",
+        "src/core/extract.js",
+        "src/platforms/instagram.js",
+        "src/platforms/tiktok.js",
+        "src/platforms/x.js",
+        "src/platforms/facebook.js",
+        "src/core/store.js",
+        "src/core/export.js",
+        "src/ui/ui.js",
+        "src/content.js"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://www.instagram.com/*",
+        "https://www.tiktok.com/*",
+        "https://x.com/*",
+        "https://twitter.com/*",
+        "https://www.facebook.com/*",
+        "https://web.facebook.com/*"
+      ],
+      "js": [
+        "src/hook.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN"
+    }
+  ],
+  "background": {
+    "service_worker": "src/background.js"
+  },
+  "host_permissions": [
+    "https://*.tiktok.com/*",
+    "https://*.tiktokcdn.com/*",
+    "https://*.tiktokcdn-us.com/*",
+    "https://*.tiktokcdn-eu.com/*",
+    "https://*.tiktokv.com/*",
+    "https://*.tiktokv.us/*",
+    "https://*.tiktokv.eu/*",
+    "https://*.ibyteimg.com/*",
+    "https://*.byteoversea.com/*",
+    "https://*.muscdn.com/*"
+  ]
+}

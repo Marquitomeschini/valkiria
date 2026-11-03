@@ -1,0 +1,32 @@
+{
+ "data": {
+  "node": {
+   "aggregated_fb_shorts": {
+    "edges": [
+     {
+      "profile_reel_node": {
+       "node": {
+        "short_form_video_context": {
+         "video": {
+          "__typename": "Video",
+          "id": "555",
+          "play_count": 12345,
+          "permalink_url": "https://www.facebook.com/reel/555/",
+          "publish_time": 1730300000,
+          "preferred_thumbnail": {
+           "image": {
+            "uri": "https://scontent.xx.fbcdn.net/r5.jpg"
+           }
+          },
+          "playable_url": "https://video.xx.fbcdn.net/v/sd555.mp4?a=1",
+          "browser_native_hd_url": "https://video.xx.fbcdn.net/v/hd555.mp4?a=1"
+         }
+        }
+       }
+      }
+     }
+    ]
+   }
+  }
+ }
+}
