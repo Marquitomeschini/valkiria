@@ -158,6 +158,28 @@
     return best ? best.url : null;
   };
 
+  /**
+   * The creation time hidden in a post id (ms), for posts that arrive without a date.
+   * Instagram and X ids are "snowflakes" (time in the high bits); TikTok ids carry Unix seconds in
+   * the high 32 bits. The result is only an estimate: the store checks it against posts that do
+   * have a date and corrects it (see store.js).
+   */
+  const ID_TIME = {
+    instagram: (n) => Number(n >> 23n) + 1314220021721,
+    x: (n) => Number(n >> 22n) + 1288834974657,
+    tiktok: (n) => Number(n >> 32n) * 1000,
+  };
+  U.idTime = function (platform, id) {
+    const f = ID_TIME[platform];
+    if (!f || id == null || !/^\d{15,20}$/.test(String(id))) return null;
+    try {
+      const t = f(BigInt(String(id)));
+      return t > 1262304000000 && t < Date.now() + 86400000 ? t : null; // 2010 .. tomorrow
+    } catch (_) {
+      return null;
+    }
+  };
+
   /** Like deepFind but returns the value at the first matching key name. */
   U.findKey = function (obj, keyName, accept, skip) {
     return U.deepFind(

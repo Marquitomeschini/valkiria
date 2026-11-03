@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Valkiria · Colecciones y comparar</title>
+  <link rel="icon" href="../../icons/icon32.png">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <header>
+    <img src="../../icons/icon48.png" width="28" height="28" alt="">
+    <h1>Valkiria</h1>
+    <nav role="tablist">
+      <button role="tab" data-tab="perfiles">Perfiles guardados</button>
+      <button role="tab" data-tab="comparar">Comparar</button>
+      <button role="tab" data-tab="colecciones">Colecciones</button>
+    </nav>
+  </header>
+  <main>
+    <section id="perfiles" hidden></section>
+    <section id="comparar" hidden></section>
+    <section id="colecciones" hidden></section>
+  </main>
+  <div id="note" class="note" role="status"></div>
+  <script src="../core/util.js"></script>
+  <script src="../core/store.js"></script>
+  <script src="../core/export.js"></script>
+  <script src="../core/stats.js"></script>
+  <script src="../core/charts.js"></script>
+  <script src="../core/cache.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

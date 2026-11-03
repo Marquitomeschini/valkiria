@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Valkiria",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Elige a las mejores publicaciones de Instagram, TikTok, X y Facebook: ordená por vistas, likes, comentarios u outlier score, filtrá, exportá y descargá.",
   "minimum_chrome_version": "111",
   "permissions": [
@@ -9,7 +9,8 @@
     "downloads",
     "offscreen",
     "declarativeNetRequestWithHostAccess",
-    "alarms"
+    "alarms",
+    "unlimitedStorage"
   ],
   "action": {
     "default_title": "Valkiria: elegí las mejores publicaciones",
@@ -45,6 +46,9 @@
         "src/platforms/facebook.js",
         "src/core/store.js",
         "src/core/export.js",
+        "src/core/stats.js",
+        "src/core/charts.js",
+        "src/core/cache.js",
         "src/ui/ui.js",
         "src/content.js"
       ],

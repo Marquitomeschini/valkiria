@@ -48,6 +48,11 @@
       comments: U.toNum(L.reply_count),
       shares: rt == null && qt == null ? null : (rt || 0) + (qt || 0),
       saves: U.toNum(L.bookmark_count),
+      idTime: U.idTime("x", t.rest_id),
+      duration: (() => {
+        const v = media.find((m) => m && m.video_info && m.video_info.duration_millis);
+        return v ? v.video_info.duration_millis / 1000 : null;
+      })(),
       media: mediaOf(media),
     };
   }

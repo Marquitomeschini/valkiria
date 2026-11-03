@@ -41,6 +41,8 @@
       platform: "instagram",
       id: code,
       pk: pk && /^\d+$/.test(pk) ? pk : null,
+      idTime: U.idTime("instagram", pk),
+      duration: typeof m.video_duration === "number" ? m.video_duration : null,
       url: "https://www.instagram.com/" + (type === "reel" ? "reel" : "p") + "/" + encodeURIComponent(code) + "/",
       author: U.str(m.user && m.user.username) || U.str(m.owner && m.owner.username),
       text: U.str(m.caption && m.caption.text),
@@ -77,6 +79,7 @@
       comments: U.toNum(n.edge_media_to_comment && n.edge_media_to_comment.count),
       shares: null,
       saves: null,
+      duration: typeof n.video_duration === "number" ? n.video_duration : null,
       media: mediaOfLegacy(n),
     };
   }

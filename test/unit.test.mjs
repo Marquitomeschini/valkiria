@@ -8,10 +8,31 @@ import path from "node:path";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const ext = path.join(here, "..", "extension", "src");
-const FILES = ["core/util.js", "core/extract.js", "platforms/instagram.js", "platforms/tiktok.js", "platforms/x.js", "platforms/facebook.js", "core/store.js", "core/export.js"];
+const FILES = ["core/util.js", "core/extract.js", "platforms/instagram.js", "platforms/tiktok.js", "platforms/x.js", "platforms/facebook.js", "core/store.js", "core/export.js", "core/stats.js", "core/cache.js"];
+
+// In-memory chrome.storage.local, enough for cache.js.
+function fakeChrome() {
+  const data = {};
+  const pick = (keys) => {
+    if (keys == null) return { ...data };
+    const out = {};
+    for (const k of [].concat(keys)) if (k in data) out[k] = JSON.parse(JSON.stringify(data[k]));
+    return out;
+  };
+  return {
+    storage: {
+      local: {
+        _data: data,
+        get: async (keys) => pick(keys),
+        set: async (obj) => Object.assign(data, JSON.parse(JSON.stringify(obj))),
+        remove: async (keys) => [].concat(keys).forEach((k) => delete data[k]),
+      },
+    },
+  };
+}
 
 function load() {
-  const ctx = vm.createContext({ console, atob, URL, Date, Intl, Math, JSON, Blob, TextEncoder, DataView, ArrayBuffer, Uint8Array, Uint32Array });
+  const ctx = vm.createContext({ console, atob, URL, Date, Intl, Math, JSON, Blob, TextEncoder, DataView, ArrayBuffer, Uint8Array, Uint32Array, BigInt, chrome: fakeChrome() });
   for (const f of FILES) vm.runInContext(readFileSync(path.join(ext, f), "utf8"), ctx, { filename: f });
   return ctx.FO;
 }
@@ -450,4 +471,108 @@ test("Windows installer files: plain ASCII with CRLF, one PowerShell marker, sam
   const updater = readFileSync(path.join(root, "tools/windows/actualizador/actualizar.ps1"), "ascii");
   assert.match(updater, /\.Content \| ConvertFrom-Json\)\.version/, "raw.githubusercontent.com serves text/plain: parse it");
   assert.ok(!/\$args\s*=/.test(installer + updater), "$args is reserved in PowerShell");
+});
+
+
+test("dates hidden in post ids (Instagram, X, TikTok)", () => {
+  const t = Date.UTC(2025, 2, 14, 18, 30, 0);
+  const ig = ((BigInt(t - 1314220021721) << 23n) | 1234n).toString();
+  const x = ((BigInt(t - 1288834974657) << 22n) | 99n).toString();
+  const tt = ((BigInt(Math.floor(t / 1000)) << 32n) | 777n).toString();
+  assert.equal(FO.util.idTime("instagram", ig), t);
+  assert.equal(FO.util.idTime("x", x), t);
+  assert.equal(FO.util.idTime("tiktok", tt), t);
+  assert.equal(FO.util.idTime("instagram", "3111"), null, "too short to be a real id");
+  assert.equal(FO.util.idTime("facebook", ig), null);
+});
+
+test("estimated dates are calibrated with posts that have a real date; velocity uses them", () => {
+  const s = new FO.Store();
+  const HOUR = 3600000;
+  const now = Date.UTC(2026, 0, 31);
+  const base = { platform: "instagram", url: "https://www.instagram.com/p/x/", text: null, thumb: null, author: "a", type: "reel", likes: 1, comments: 0, shares: null, saves: null };
+  // The id formula is off by one hour for these posts: the store must learn that.
+  s.add(
+    [
+      { ...base, id: "A", date: now - 10 * 86400000, idTime: now - 10 * 86400000 - HOUR, views: 1000 },
+      { ...base, id: "B", date: now - 20 * 86400000, idTime: now - 20 * 86400000 - HOUR, views: 1000 },
+      { ...base, id: "C", date: null, idTime: now - 5 * 86400000 - HOUR, views: 5000 },
+    ],
+    [],
+    "p"
+  );
+  const c = plain(s.query({ ctx: "p", now }).find((i) => i.id === "C"));
+  assert.equal(c.date, now - 5 * 86400000, "calibrated");
+  assert.equal(c.dateEstimated, true);
+  assert.equal(Math.round(c.velocity), 1000, "5000 views in 5 days");
+  // A real date later replaces the estimate.
+  s.add([{ ...base, id: "C", date: now - 6 * 86400000, idTime: now - 5 * 86400000 - HOUR }], [], "p");
+  const c2 = plain(s.query({ ctx: "p", now }).find((i) => i.id === "C"));
+  assert.deepEqual([c2.date, c2.dateEstimated], [now - 6 * 86400000, false]);
+  assert.deepEqual(plain(s.query({ ctx: "p", now, sortKey: "velocity" }).map((i) => i.id)), ["C", "A", "B"]);
+});
+
+test("duration filter and snapshot/restore", () => {
+  const s = new FO.Store();
+  const base = { platform: "tiktok", url: "https://www.tiktok.com/@a/video/1", text: "x".repeat(800), thumb: null, author: "a", type: "video", likes: 1, comments: 1, shares: 0, saves: 0, date: 1 };
+  s.add([{ ...base, id: "1", views: 10, duration: 9 }, { ...base, id: "2", views: 20, duration: 45 }, { ...base, id: "3", views: 30, duration: 300 }, { ...base, id: "4", views: 40, duration: null }], [], "p");
+  const ids = (o) => plain(s.query(Object.assign({ ctx: "p", sortKey: "views" }, o)).map((i) => i.id));
+  assert.deepEqual(ids({ maxDur: 15 }), ["1"]);
+  assert.deepEqual(ids({ minDur: 15, maxDur: 60 }), ["2"]);
+  assert.deepEqual(ids({ minDur: 180 }), ["3"]);
+  const snap = plain(s.snapshot("p"));
+  assert.equal(snap.length, 4);
+  assert.equal(snap[0].text.length, 500, "long texts are trimmed when saved");
+  assert.ok(!("ctxs" in snap[0]) && !("seq" in snap[0]));
+  const s2 = new FO.Store();
+  s2.restore(snap, "q");
+  assert.deepEqual(plain(s2.query({ ctx: "q", sortKey: "feed" }).map((i) => i.id)), ["1", "2", "3", "4"], "feed order kept");
+});
+
+test("profile summary: medians, best weekday and hour, hashtags, frequency", () => {
+  // Mondays 20:00 do great, Thursdays 09:00 don't. One post every 3.5 days.
+  const mon = new Date(2026, 0, 5, 20, 0).getTime(); // Monday
+  const thu = new Date(2026, 0, 8, 9, 0).getTime(); // Thursday
+  const items = [];
+  for (let w = 0; w < 4; w++) {
+    items.push({ id: "m" + w, date: mon + w * 7 * 86400000, views: 10000 + w, likes: 100, text: "#gym #outfit", type: "reel" });
+    items.push({ id: "t" + w, date: thu + w * 7 * 86400000, views: 1000 + w, likes: 10, text: "#outfit", type: "reel" });
+  }
+  const st = FO.stats.summarize(items, { now: thu + 4 * 7 * 86400000 });
+  assert.equal(st.count, 8);
+  assert.equal(st.metric, "views");
+  assert.equal(st.medianViews, (1003 + 10000) / 2);
+  const best = (rows) => rows.filter((r) => r.n).sort((a, b) => b.value - a.value)[0];
+  assert.equal(best(st.byWeekday).label, "lun");
+  assert.equal(best(st.byHour).label, "20");
+  assert.equal(st.byWeekday.find((r) => r.label === "jue").n, 4);
+  assert.deepEqual(plain(st.hashtags.map((t) => [t.label, t.n])), [["#gym", 4], ["#outfit", 8]]);
+  assert.equal(Math.round(st.postsPerWeek * 10) / 10, 2.1); // 7 gaps over 23.5 days (3.36 weeks)
+  assert.equal(st.timeline.length, 8);
+});
+
+test("saved profiles (newest first, at most 40) and collections", async () => {
+  const cache = FO.cache;
+  for (let i = 0; i < 42; i++) await cache.save("instagram", "perfil" + i, "@perfil" + i, [{ id: "a" + i, url: "https://www.instagram.com/p/a/" }], { complete: i % 2 === 0 });
+  const list = plain(await cache.list());
+  assert.equal(list.length, 40, "oldest ones are dropped");
+  assert.equal(list[0].ctx, "perfil41");
+  assert.equal(await cache.load("instagram", "perfil0"), null, "evicted entry is gone");
+  const e = plain(await cache.load("instagram", "perfil41"));
+  assert.equal(e.count, 1);
+  assert.equal(e.complete, false);
+  await cache.save("instagram", "otros:perfil1", "x", [{ id: "z", url: "https://x" }]);
+  assert.equal(await cache.load("instagram", "otros:perfil1"), null, "other accounts' posts are never saved");
+
+  const col = FO.collections;
+  const p = (id) => ({ platform: "tiktok", id, url: "https://www.tiktok.com/@a/video/" + id });
+  assert.equal(await col.add("Ideas de hooks", [p("1"), p("2")]), 2);
+  assert.equal(await col.add("Ideas de hooks", [p("2"), p("3")]), 1, "no duplicates");
+  await new Promise((r) => setTimeout(r, 5)); // distinct "updated" times
+  await col.add("Outfits", [p("9")]);
+  assert.deepEqual(plain(await col.names()), ["Outfits", "Ideas de hooks"]);
+  await col.removeItem("Ideas de hooks", "tiktok", "1");
+  assert.deepEqual(plain((await col.all())["Ideas de hooks"].items.map((i) => i.id)), ["2", "3"]);
+  await col.removeCollection("Outfits");
+  assert.deepEqual(plain(await col.names()), ["Ideas de hooks"]);
 });

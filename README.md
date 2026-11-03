@@ -118,11 +118,17 @@ Funciona igual que SortFeed: todo se maneja desde el escudo de la extensión en 
    - **Publicaciones:** todas, o las últimas 50, 100, 250, 500 o 1000.
    - **Fecha:** de la última semana, del último mes, de los últimos 3 o 6 meses, del último año,
      todas o un rango personalizado.
-4. En **Ordenar por** tocá el criterio: likes, vistas, outlier score, comentarios, compartidos,
-   engagement o más antiguas. Arranca solo.
+4. En **Ordenar por** tocá el criterio: likes, vistas, vistas por día, outlier score,
+   comentarios, compartidos, engagement o más antiguas. Arranca solo.
 5. La página se desenfoca y arriba aparece "N publicaciones cargadas — no hagas scroll". La
-   extensión baja sola hasta juntar lo que pediste: corta al llegar a la cantidad, a la fecha o al
-   final del perfil. **Detener** la frena cuando quieras.
+   extensión baja sola hasta juntar lo que pediste. Corta sola cuando:
+   - llega a la cantidad o a la fecha que elegiste;
+   - la red avisa que no hay más publicaciones;
+   - la página deja de crecer;
+   - la red pide esperar (se pausa para cuidar tu cuenta y te avisa).
+
+   **Detener** la frena cuando quieras. Pase lo que pase, al terminar muestra lo que llegó a
+   cargar.
 6. Aparecen los resultados ("Reels más vistos · Mostrando 559 reels"), en una grilla con la
    métrica principal abajo a la izquierda. Pasando el mouse ves todas las métricas y tocando una
    publicación la abrís en otra pestaña.
@@ -131,9 +137,12 @@ En los resultados:
 
 | Control | Qué hace |
 | --- | --- |
+| Grilla · Tabla · Resumen | Tres formas de ver lo mismo. **Tabla**: columnas que se ordenan con un clic. **Resumen**: medianas, vistas por día, frecuencia, cada publicación en el tiempo, mejor día y hora para publicar, y los hashtags que mejor rinden. |
+| Actualizar datos | Vuelve a cargar desde la red. Arriba dice de cuándo son los datos y por qué terminó la carga. |
+| Guardar | En modo Seleccionar, guarda las publicaciones marcadas en una colección. |
 | Descargar | Baja los videos y fotos del top 100 de la lista que estás viendo (o de las publicaciones que marcaste con Seleccionar). Ver "Descargas" más abajo. |
 | Exportar | Google Sheets (copia la tabla y abre una hoja nueva para pegar), Excel (.xlsx), CSV y JSON. Cada formato se puede descargar o copiar. |
-| Filtros | Tipo (reel, video, foto, carrusel o texto), rango de fechas, vistas mínimas y búsqueda por texto o `@autor`. |
+| Filtros | Tipo (reel, video, foto, carrusel o texto), rango de fechas, vistas mínimas, duración del video y búsqueda por texto o `@autor`. |
 | Ordenar por | Cambia el orden sin volver a cargar. La flecha lo invierte. Lo que no tiene ese dato va siempre al final. |
 | Limpiar filtros | Vuelve a lo que elegiste en el popup. |
 | Seleccionar | Marcás publicaciones sueltas y Exportar exporta solo esas. |
@@ -145,6 +154,18 @@ tiene.
 En un perfil, Valkiria cuenta solo las publicaciones de esa cuenta. Las redes cargan en el fondo
 publicaciones recomendadas de otras cuentas, y esas quedan afuera. En la pestaña "Etiquetadas" de
 Instagram sí entran las de otras cuentas, porque es lo que muestra esa pestaña.
+
+**Vistas por día:** vistas ÷ días desde que se publicó. Muestra lo que está funcionando *ahora*:
+un reel de la semana pasada con 200 mil vistas puede rendir más que uno de hace dos años con un
+millón.
+
+**Perfiles guardados:** cada perfil, búsqueda o hashtag que cargás queda guardado en tu
+navegador. La próxima vez que lo abras, los resultados aparecen al instante, y **Actualizar
+datos** los trae de nuevo.
+
+**Fechas estimadas:** algunas grillas (por ejemplo, la pestaña de reels de Instagram) no mandan la
+fecha. En ese caso Valkiria la calcula a partir del número de la publicación y la corrige
+comparándola con las que sí tienen fecha. En la tabla aparecen con un asterisco.
 
 **Outlier score:** cuántas veces supera una publicación a la publicación típica del perfil, es
 decir, vistas ÷ mediana de vistas de las publicaciones elegidas (likes ÷ mediana de likes si no hay
@@ -207,6 +228,18 @@ automáticamente por ese mismo camino.
 Descargá contenido de otras personas solo para uso personal: los videos y las fotos tienen
 derechos de autor.
 
+### Colecciones y comparar
+
+Desde el popup o desde los resultados (**Colecciones y comparar**) se abre la página propia de
+Valkiria, con tres partes:
+
+- **Perfiles guardados:** abrir, exportar o borrar cada perfil cargado (se guardan los últimos 40).
+- **Comparar:** hasta 3 perfiles lado a lado: medianas de vistas y likes, vistas por día,
+  engagement, frecuencia, mejor día y hora, y las 5 mejores publicaciones de cada uno.
+- **Colecciones:** las publicaciones que guardaste, de cualquier red, para exportarlas o abrirlas.
+
+Todo queda en tu navegador: no se sube a ningún lado.
+
 ### Qué tiene SortFeed que Valkiria no
 
 - **Transcripciones** ("Export + Transcripts") y **cuentas similares** ("Similar"). Dependen de un
@@ -231,11 +264,15 @@ No usa ninguna API externa ni manda datos a ningún servidor: todo queda en tu n
 - `src/ui/ui.js` dibuja el aviso de carga y los resultados dentro de un Shadow DOM, para que los
   estilos de la página no los rompan. Toma el tema claro u oscuro de la página. Las teclas que
   escribís ahí no llegan a los atajos del sitio (por ejemplo, la "l" de X para dar like).
+- `src/core/stats.js` calcula el resumen del perfil; `src/core/charts.js` dibuja los gráficos.
+- `src/core/cache.js` guarda los perfiles cargados y las colecciones en `chrome.storage.local`.
+- `src/app/` es la página de colecciones, perfiles guardados y comparación.
 - `src/popup/` es el popup del ícono.
 
 Permisos:
 
-- `storage`: recordar los filtros elegidos en el popup.
+- `storage` y `unlimitedStorage`: recordar los filtros del popup y guardar los perfiles cargados y
+  las colecciones (en tu navegador).
 - `downloads`: guardar los videos y fotos.
 - `offscreen`: la página oculta que pide los videos de TikTok (`src/offscreen/`).
 - `declarativeNetRequestWithHostAccess` y acceso a los dominios de TikTok: agregar

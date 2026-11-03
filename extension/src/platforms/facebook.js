@@ -83,6 +83,13 @@
     ).filter(Boolean);
   }
 
+  function durationOf(o) {
+    const ms = U.deepFind(o, (k, v) => (k === "playable_duration_in_ms" && typeof v === "number" ? v : undefined), SKIP_FOR_POST_METRICS);
+    if (ms) return ms / 1000;
+    const sec = U.deepFind(o, (k, v) => (k === "length_in_second" && typeof v === "number" ? v : undefined), SKIP_FOR_POST_METRICS);
+    return sec || null;
+  }
+
   function fromStory(s) {
     const m = metrics(s);
     const url =
@@ -115,6 +122,7 @@
       thumb: thumb || null,
       date: U.toDate(date),
       type: m.views != null ? (/\/reel\//.test(url) ? "reel" : "video") : thumb ? "photo" : "text",
+      duration: durationOf(s),
       views: m.views,
       likes: m.likes,
       comments: m.comments,
@@ -143,6 +151,7 @@
         U.safeUrl(v.image && v.image.uri),
       date: U.toDate(v.publish_time != null ? v.publish_time : v.creation_time),
       type: /\/reel\//.test(url) ? "reel" : "video",
+      duration: durationOf(v),
       views: num(v.play_count) ?? num(v.video_view_count) ?? m.views,
       likes: m.likes,
       comments: m.comments,

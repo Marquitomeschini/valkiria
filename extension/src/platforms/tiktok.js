@@ -52,6 +52,8 @@
       comments: pick(s2, s1, "commentCount"),
       shares: pick(s2, s1, "shareCount"),
       saves: pick(s2, s1, "collectCount"),
+      idTime: U.idTime("tiktok", id),
+      duration: o.video && typeof o.video.duration === "number" && o.video.duration > 0 ? o.video.duration : null,
       media,
     };
   }

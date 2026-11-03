@@ -129,6 +129,18 @@ function igForeign() {
     node: { media: { code: "OTRA" + k + "xyz", pk: String(900 + k), id: `${900 + k}_7`, taken_at: Math.floor(NOW / 1000) - 3600, media_type: 2, product_type: "clips", like_count: 9e8, comment_count: 9e6, user: { username: "otra_cuenta" }, image_versions2: { candidates: [{ url: `https://${thumbHost.instagram}/v/otra${k}.jpg`, width: 360, height: 640 }] } } },
   }));
 }
+function fakeReel(code, pk, views) {
+  return { pk: String(pk), id: pk + "_1", code, media_type: 2, product_type: "clips", like_count: 10, comment_count: 1, play_count: views || 1000, image_versions2: { candidates: [{ url: `https://${thumbHost.instagram}/v/${code}.jpg`, width: 320, height: 400 }] } };
+}
+// A profile whose page keeps receiving posts (with no author) in the background, never grows and
+// never says "no more pages": what made the loader spin forever.
+function infiniteHtml() {
+  const first = { data: { xdt_api__v1__clips__user__connection_v2: { edges: Array.from({ length: 12 }, (_, k) => ({ node: { media: fakeReel("INF" + k + "abc", 800000 + k, 2000 + k) } })), page_info: { has_next_page: true } } } };
+  return `<!doctype html><html><head><meta charset="utf-8"><title>infinito</title></head><body style="margin:0;background:#000;color:#eee">
+<script type="application/json" data-sjs>${JSON.stringify(first)}</script><div style="height:2500px">perfil</div>
+<script>window.__bgPosts = 0; let k = 0; setInterval(() => fetch('/graphql/query', { method: 'POST', body: 'bg=' + (k++) }).then(r => r.json()).then(() => { window.__bgPosts += 2; }), 400);</script>
+</body></html>`;
+}
 function ttItem(p) {
   const e = expected("tiktok", p);
   const id = e.url.split("/").pop();
@@ -359,6 +371,15 @@ await context.route("**/*", async (route) => {
   if (Object.values(thumbHost).includes(u.hostname)) return route.fulfill({ contentType: "image/svg+xml", body: thumbSvg(u.pathname) });
   if (!platform) return route.fulfill({ status: 404, body: "" });
   const posts = data[platform.id];
+  // Scenario pages.
+  if (platform.id === "instagram" && u.pathname === "/infinito/" && req.resourceType() === "document") return route.fulfill({ contentType: "text/html; charset=utf-8", body: infiniteHtml() });
+  const bg = /(?:^|&)bg=(\d+)/.exec(req.postData() || "");
+  if (platform.id === "instagram" && bg) return route.fulfill({ contentType: "application/json", body: JSON.stringify({ data: { xdt_api__v1__clips__user__connection_v2: { edges: [0, 1].map((k) => ({ node: { media: fakeReel("BG" + bg[1] + "x" + k, 500000 + Number(bg[1]) * 2 + k) } })), page_info: { has_next_page: true } } } }) });
+  if (platform.id === "tiktok" && (req.frame()?.url() || "").includes("@limitado") && /cursor=\d/.test(u.search)) {
+    // First page fine (posts by @limitado), then TikTok asks to slow down.
+    if (/cursor=0(&|$)/.test(u.search)) return route.fulfill({ contentType: "application/json", body: JSON.stringify({ itemList: posts.slice(0, PER_PAGE).map((p) => ({ ...ttItem(p), author: { uniqueId: "limitado" } })), hasMore: true }) });
+    return route.fulfill({ status: 429, contentType: "application/json", body: '{"statusCode":10000,"statusMsg":"too many requests"}' });
+  }
   if (req.resourceType() === "document") return route.fulfill({ contentType: "text/html; charset=utf-8", body: html(platform.id, posts) });
   // Instagram's "full post" API, used to download trimmed posts.
   const info = platform.id === "instagram" && /^\/api\/v1\/media\/(\d+)\/info\/$/.exec(u.pathname);
@@ -374,7 +395,7 @@ await context.route("**/*", async (route) => {
 });
 
 async function downloadFrom(page, rowLabel, buttonTitle) {
-  await page.locator(R(".head .menuwrap > button")).click();
+  await page.locator(R(".head .menuwrap > button.outline")).click();
   const [dl] = await Promise.all([
     page.waitForEvent("download"),
     page.locator(R(`.menu .mi:has-text("${rowLabel}") button[title="${buttonTitle}"]`)).click(),
@@ -461,6 +482,7 @@ for (const P of PLATFORMS) {
       assert.equal(d.posts, exp.length, "diagnostic: posts");
       assert.equal(d.otherAccounts, 4, "diagnostic: recommended reels from other accounts set apart");
       assert.ok(d.responses.length >= PAGES, "diagnostic: responses");
+      assert.equal(d.lastLoad.reason, "end-signal", "stopped because Instagram said there were no more pages");
       const raw = JSON.stringify(d);
       for (const leak of ["otra_cuenta", "receta", "cdninstagram", "prueba/"]) assert.ok(!raw.includes(leak), "diagnostic leaks " + leak);
     }
@@ -470,9 +492,35 @@ for (const P of PLATFORMS) {
     await page.waitForTimeout(50);
     assert.deepEqual(await tileHrefs(page), sortExpected(exp, P.resort), "re-sorted by " + P.resort);
     await page.locator(R(".tools > button:first-child")).click(); // "Filtros"
-    await page.locator(R(".filters select")).selectOption(P.typeFilter);
+    await page.locator(R('.filters select[aria-label="Tipo"]')).selectOption(P.typeFilter);
     const filtered = exp.filter((e) => e.type === P.typeFilter);
     assert.deepEqual(await tileHrefs(page), sortExpected(filtered, P.resort), "type filter " + P.typeFilter);
+
+    // ---- table and summary views ----
+    if (P.id === "instagram") {
+      await page.locator(R('.views button:has-text("Tabla")')).click();
+      const rows = await inShadow(page, `return root.querySelectorAll('.tablewrap tbody tr').length`);
+      assert.equal(rows, filtered.length, "table rows");
+      await page.locator(R('.views button:has-text("Resumen")')).click();
+      const sum = await inShadow(page, `return { tiles: root.querySelectorAll('.summary .stat').length, charts: root.querySelectorAll('.summary .chart').length, svgs: root.querySelectorAll('.summary svg').length }`);
+      assert.equal(sum.tiles, 5, "summary tiles");
+      assert.ok(sum.charts >= 3 && sum.svgs >= 3, "summary charts " + JSON.stringify(sum));
+      if (SHOTS) {
+        await page.locator(R('.filters select[aria-label="Tipo"]')).selectOption("all");
+        await page.waitForTimeout(400);
+        await page.screenshot({ path: path.join(SHOTS, "summary.png"), fullPage: false });
+        await page.locator(R('.filters select[aria-label="Tipo"]')).selectOption(P.typeFilter);
+      }
+      await page.locator(R('.views button:has-text("Grilla")')).click();
+    }
+    if (P.id === "tiktok") {
+      await page.locator(R(".tools select")).selectOption("velocity");
+      const now = Date.now();
+      const vel = filtered.map((e) => ({ ...e, velocity: e.views == null ? null : e.views / Math.max(1, (now - e.date) / DAY) }));
+      FIELD.velocity = "velocity";
+      assert.deepEqual(await tileHrefs(page), sortExpected(vel, "velocity"), "sorted by views per day");
+      await page.locator(R(".tools select")).selectOption(P.resort);
+    }
 
     // ---- export (all filtered) ----
     const csv = await downloadFrom(page, "CSV", "Descargar .csv");
@@ -492,7 +540,7 @@ for (const P of PLATFORMS) {
     await page.locator(R(".tools button:has-text('Seleccionar')")).click();
     const tiles = page.locator(R(".results .tile"));
     for (const i of [0, 2, 3]) await tiles.nth(i).click();
-    assert.equal((await text(page, ".head .menuwrap > button")).replace(/\s+/g, " ").trim(), "Exportar3");
+    assert.equal((await text(page, ".head .menuwrap > button.outline")).replace(/\s+/g, " ").trim(), "Exportar3");
     if (SHOTS && P.id === "tiktok") await page.screenshot({ path: path.join(SHOTS, "select.png") });
     const sel = await downloadFrom(page, "CSV", "Descargar .csv");
     const selRows = sel.bytes.toString("utf8").replace(/\r\n$/, "").split("\r\n");
@@ -500,6 +548,12 @@ for (const P of PLATFORMS) {
     assert.deepEqual(selRows.slice(1).map((r) => r.split(";")[1]), [order[0], order[2], order[3]], "selected rows exported");
     const byUrl = new Map(exp.map((e) => [e.url, e]));
     await downloadAndCheck(page, [order[0], order[2], order[3]].map((u) => byUrl.get(u)), "download selected");
+    if (P.id === "instagram") {
+      await page.locator(R('.head button:has-text("Guardar")')).click();
+      await page.locator(R('.savebox input')).fill("Mis ideas");
+      await page.locator(R('.savebox button:has-text("Crear")')).click();
+      await page.waitForFunction(() => /3 publicaciones guardadas en «Mis ideas»/.test(document.querySelector("#valkiria-root").shadowRoot.querySelector(".note").textContent));
+    }
     await page.locator(R(".head button:has-text('Cancelar')")).click();
     if (P.id === "instagram" || P.id === "tiktok") await downloadAndCheck(page, order.slice(0, 100).map((u) => byUrl.get(u)), "download top");
 
@@ -511,7 +565,7 @@ for (const P of PLATFORMS) {
     }
 
     // ---- back to the page, reopen from the popup without reloading ----
-    await page.locator(R(".topbar button")).click();
+    await page.locator(R(".topbar > button")).click();
     assert.equal(await inShadow(page, `return !!root.querySelector('.results.on')`), false, "results closed");
     await popup.locator("#show").click();
     await page.waitForFunction(() => document.querySelector("#valkiria-root").shadowRoot.querySelector(".results.on"));
@@ -531,6 +585,99 @@ for (const P of PLATFORMS) {
   }
 }
 
+// ---------- extra scenarios ----------
+async function scenario(name, fn) {
+  const t0 = Date.now();
+  const pages = [];
+  try {
+    await fn(pages);
+    console.log(`ok   scenario: ${name} (${((Date.now() - t0) / 1000).toFixed(1)} s)`);
+  } catch (e) {
+    failures++;
+    console.log(`FAIL scenario ${name}: ${e.message.split("\n").slice(0, 8).join("\n")}`);
+  } finally {
+    for (const p of pages) await p.close().catch(() => {});
+  }
+}
+async function openPopup(pages) {
+  const popup = await context.newPage();
+  pages.push(popup);
+  await popup.setViewportSize({ width: 300, height: 640 });
+  await popup.goto(POPUP);
+  await popup.waitForFunction(() => document.getElementById("where").textContent.length > 0);
+  return popup;
+}
+const resultsOpen = (page, timeout) => page.waitForFunction(() => document.querySelector("#valkiria-root").shadowRoot.querySelector(".results.on"), null, { timeout: timeout || 60000 });
+
+await scenario("endless background posts at the end of a profile (no 'no more pages' signal)", async (pages) => {
+  const page = await context.newPage();
+  pages.push(page);
+  await page.goto("https://www.instagram.com/infinito/");
+  const popup = await openPopup(pages);
+  await popup.locator("#modePosts").click();
+  await popup.locator("#postsSel").selectOption("0");
+  await popup.locator('#sorts button[data-sort="views"]').click();
+  await page.bringToFront();
+  await resultsOpen(page, 60000); // used to keep "loading" forever
+  assert.equal(await inShadow(page, `return !!root.querySelector('.toast.on')`), false, "loading notice closed");
+  assert.ok(await page.evaluate(() => window.__bgPosts) >= 4, "the page kept sending posts in the background");
+  assert.match(await text(page, ".statusline"), /dejó de mandar/);
+});
+
+await scenario("the site asks to wait (HTTP 429): pause and say so", async (pages) => {
+  const page = await context.newPage();
+  pages.push(page);
+  await page.goto("https://www.tiktok.com/@limitado");
+  const popup = await openPopup(pages);
+  await popup.locator("#modePosts").click();
+  await popup.locator("#postsSel").selectOption("0");
+  await popup.locator('#sorts button[data-sort="views"]').click();
+  await page.bringToFront();
+  await resultsOpen(page, 20000);
+  assert.match(await text(page, ".statusline"), /pidió esperar/);
+  assert.equal(await inShadow(page, `return root.querySelectorAll('.results .tile').length`), 12, "what loaded before the limit is shown");
+});
+
+await scenario("a saved profile opens instantly; 'Actualizar datos' loads it again", async (pages) => {
+  const page = await context.newPage();
+  pages.push(page);
+  await page.goto("https://www.instagram.com/prueba/");
+  const popup = await openPopup(pages);
+  await popup.waitForFunction(() => /Guardado .*72/.test(document.getElementById("status").textContent));
+  const t0 = Date.now();
+  await popup.locator('#sorts button[data-sort="likes"]').click();
+  await page.bringToFront();
+  await resultsOpen(page, 5000);
+  assert.ok(Date.now() - t0 < 3000, "instant");
+  assert.equal(await page.evaluate(() => window.__pagesLoaded), 1, "nothing requested from the network");
+  assert.match(await text(page, ".statusline"), /Datos guardados/);
+  assert.equal(await inShadow(page, `return root.querySelectorAll('.results .tile').length`), 72);
+  await page.locator(R('.statusline button:has-text("Actualizar datos")')).click();
+  await page.waitForFunction(() => document.querySelector("#valkiria-root").shadowRoot.querySelector(".toast.on"), null, { timeout: 5000 });
+  await resultsOpen(page, 60000);
+  assert.equal(await page.evaluate(() => window.__pagesLoaded), PAGES, "reloaded from the network");
+  assert.match(await text(page, ".statusline"), /Cargado/);
+});
+
+await scenario("collections, saved profiles and comparison page", async (pages) => {
+  const app = await context.newPage();
+  pages.push(app);
+  await app.goto(`chrome-extension://${EXT_ID}/src/app/app.html#colecciones`);
+  await app.locator("text=Mis ideas").first().waitFor();
+  await app.locator('#colecciones button:has-text("Ver")').first().click();
+  assert.equal(await app.locator("#colecciones .post").count(), 3, "the 3 saved posts");
+  await app.locator('nav button[data-tab="perfiles"]').click();
+  assert.ok((await app.locator("#perfiles .item").count()) >= 5, "saved profiles listed");
+  await app.locator('nav button[data-tab="comparar"]').click();
+  await app.locator("#comparar table.t").waitFor();
+  assert.equal(await app.locator("#comparar table.t thead th").count(), 3, "two profiles compared by default");
+  assert.ok((await app.locator("#comparar .vrows").count()) >= 4, "comparison bars");
+  if (SHOTS) {
+    await app.setViewportSize({ width: 1200, height: 1000 });
+    await app.screenshot({ path: path.join(SHOTS, "compare.png"), fullPage: true });
+  }
+});
+
 await context.close();
-console.log(failures ? `${failures} platform(s) failed` : "all platforms passed");
+console.log(failures ? `${failures} failed` : "all platforms passed");
 process.exit(failures ? 1 : 0);

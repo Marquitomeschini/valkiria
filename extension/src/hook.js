@@ -43,8 +43,8 @@
     }
   }
 
-  function emit(url, text, name) {
-    const detail = JSON.stringify({ url: url, text: text, name: name || null });
+  function emit(url, text, name, status) {
+    const detail = JSON.stringify({ url: url, text: text, name: name || null, status: status || 200 });
     if (!ready) {
       if (queue.length >= MAX_QUEUE) queue.shift();
       queue.push(detail);
@@ -82,7 +82,14 @@
           p.then(function (res) {
             try {
               const ct = res.headers.get("content-type") || "";
-              if (!res.ok || /image|video|audio|octet-stream/.test(ct)) return;
+              if (/image|video|audio|octet-stream/.test(ct)) return;
+              if (!res.ok) {
+                // Errors are passed on (short) so the extension can tell "wait a few minutes" apart.
+                res.clone().text().then(function (t) {
+                  emit(url, (t || "").slice(0, 2000), name, res.status);
+                }, function () {});
+                return;
+              }
               res.clone().text().then(function (t) {
                 if (t && t.length <= MAX_BODY_CHARS) emit(url, t, name);
               }, function () {});
@@ -112,7 +119,14 @@
           const name = queryName(body);
           xhr.addEventListener("load", function () {
             try {
-              if (xhr.status < 200 || xhr.status >= 300) return;
+              if (xhr.status < 200 || xhr.status >= 300) {
+                let e = "";
+                try {
+                  e = xhr.responseType === "" || xhr.responseType === "text" ? String(xhr.responseText || "").slice(0, 2000) : "";
+                } catch (_) {}
+                emit(xhr.__valkiriaUrl, e, name, xhr.status || 0);
+                return;
+              }
               let t = null;
               if (xhr.responseType === "" || xhr.responseType === "text") t = xhr.responseText;
               else if (xhr.responseType === "json" && xhr.response != null) t = JSON.stringify(xhr.response);

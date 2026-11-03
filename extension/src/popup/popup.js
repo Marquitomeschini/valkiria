@@ -59,6 +59,13 @@ function filter() {
   return f;
 }
 
+function agoText(ms) {
+  const m = Math.round((Date.now() - ms) / 60000);
+  if (m < 60) return "hace " + Math.max(1, m) + " min";
+  const h = Math.round(m / 60);
+  return h < 48 ? "hace " + h + " h" : "hace " + Math.round(h / 24) + " días";
+}
+
 function renderStatus(st) {
   const ok = !!(st && st.ok);
   $("unsupported").hidden = ok;
@@ -69,7 +76,16 @@ function renderStatus(st) {
   $("diagrow").hidden = !ok;
   $("stop").hidden = !(ok && st.running);
   $("show").hidden = !(ok && !st.running && st.hasResults);
-  $("status").textContent = !ok ? "" : st.running ? "Cargando… " + st.count + " " + st.noun : st.count ? st.count + " " + st.noun + " cargad" + (st.noun === "publicaciones" ? "as" : "os") : "";
+  const made = st && st.noun === "publicaciones" ? "as" : "os";
+  $("status").textContent = !ok
+    ? ""
+    : st.running
+      ? "Cargando… " + st.count + " " + st.noun
+      : st.saved
+        ? "Guardado " + agoText(st.saved.savedAt) + ": " + st.saved.count + " " + st.noun + ". Se abre al instante."
+        : st.count
+          ? st.count + " " + st.noun + " cargad" + made
+          : "";
 }
 
 async function refresh() {
@@ -109,6 +125,7 @@ $("sorts").addEventListener("click", async (e) => {
   refresh();
 });
 $("show").addEventListener("click", () => send({ type: "fo:show" }));
+$("openapp").addEventListener("click", () => chrome.tabs.create({ url: chrome.runtime.getURL("src/app/app.html") }));
 
 // ---- version and updates (the Windows installer syncs the folder; Valkiria reloads itself) ----
 const REPO = "Marquitomeschini/valkiria";

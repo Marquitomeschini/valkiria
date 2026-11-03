@@ -7,6 +7,7 @@
   const TYPE_NAMES = { reel: "Reel", video: "Video", photo: "Foto", carousel: "Carrusel", text: "Texto" };
   const SORT_LABELS = [
     ["views", "Vistas"],
+    ["velocity", "Vistas por día"],
     ["likes", "Likes"],
     ["outlier", "Outlier score"],
     ["comments", "Comentarios"],
@@ -19,6 +20,7 @@
   // [masculine, feminine] phrase per sort, for "Reels más vistos" / "Publicaciones más vistas".
   const TITLES = {
     views: ["más vistos", "más vistas"],
+    velocity: ["con más vistas por día", "con más vistas por día"],
     likes: ["con más likes", "con más likes"],
     comments: ["con más comentarios", "con más comentarios"],
     shares: ["más compartidos", "más compartidas"],
@@ -29,6 +31,13 @@
     feed: ["en el orden del feed", "en el orden del feed"],
   };
   const ICONS = {
+    velocity: "M20.38 8.57l-1.23 1.85a8 8 0 0 1-.22 7.58H5.07A8 8 0 0 1 15.58 6.85l1.85-1.23A10 10 0 0 0 3.35 19a2 2 0 0 0 1.72 1h13.85a2 2 0 0 0 1.74-1 10 10 0 0 0-.27-10.44zm-9.79 6.84a2 2 0 0 0 2.83 0l5.66-8.49-8.49 5.66a2 2 0 0 0 0 2.83z",
+    gridView: "M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z",
+    tableView: "M3 5h18v2H3V5zm0 6h18v2H3v-2zm0 6h18v2H3v-2z",
+    chartView: "M5 9.2h3V19H5V9.2zM10.6 5h2.8v14h-2.8V5zm5.6 8H19v6h-2.8v-6z",
+    bookmark: "M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z",
+    refresh: "M17.65 6.35A7.958 7.958 0 0 0 12 4a8 8 0 1 0 7.73 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z",
+    library: "M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z",
     views: "M8 5v14l11-7z",
     likes: "M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z",
     comments: "M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z",
@@ -56,6 +65,47 @@
 .fo.dark  { --page: #0b0b0d; --card: #1c1d21; --card2: #25262b; --fg: #f2f2f4; --muted: #9b9ca5; --line: #2f3036; --hover: #2b2c31; }
 .fo.light { --page: #f4f4f6; --card: #ffffff; --card2: #f3f3f6; --fg: #16161a; --muted: #6c6d76; --line: #e2e2e8; --hover: #ededf2; }
 .fo { --accent: #e6b955; --accent2: #e6b955; }
+.fo.light { --viz-1: #2a78d6; --viz-2: #eb6834; --viz-3: #1baf7a; --viz-grid: #e6e6ea; --viz-surface: #ffffff; --viz-text: #16161a; --viz-muted: #6c6d76; --viz-tip-bg: #16161a; --viz-tip-fg: #ffffff; }
+.fo.dark  { --viz-1: #3987e5; --viz-2: #d95926; --viz-3: #199e70; --viz-grid: #2f3036; --viz-surface: #1c1d21; --viz-text: #f2f2f4; --viz-muted: #9b9ca5; --viz-tip-bg: #f2f2f4; --viz-tip-fg: #16161a; }
+.statusline { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; color: var(--muted); font-size: 12.5px; margin-top: 6px; }
+.statusline .warn { color: var(--accent); }
+.statusline button { font: 600 12.5px system-ui, sans-serif; color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer; display: inline-flex; gap: 4px; align-items: center; }
+.statusline button svg { width: 14px; height: 14px; }
+.views { display: inline-flex; background: var(--card2); border: 1px solid var(--line); border-radius: 9px; padding: 2px; gap: 2px; }
+.views button { display: inline-flex; align-items: center; gap: 6px; border: 0; background: transparent; color: var(--muted); font: 500 13px system-ui, sans-serif; padding: 0 10px; height: 28px; border-radius: 7px; cursor: pointer; }
+.views button svg { width: 15px; height: 15px; }
+.views button[aria-pressed="true"] { background: var(--card); color: var(--fg); box-shadow: 0 1px 2px rgba(0,0,0,.15); }
+.tablewrap { overflow-x: auto; border-top: 1px solid var(--line); }
+table.t { width: 100%; border-collapse: collapse; font: 13px system-ui, sans-serif; font-variant-numeric: tabular-nums; }
+table.t th { text-align: right; font-weight: 600; color: var(--muted); padding: 9px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; cursor: pointer; user-select: none; position: sticky; top: 0; background: var(--card); }
+table.t th.l, table.t td.l { text-align: left; }
+table.t th.on { color: var(--fg); }
+table.t td { padding: 6px 10px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; color: var(--fg); }
+table.t tr { cursor: pointer; }
+table.t tbody tr:hover td { background: var(--hover); }
+table.t tr.sel td { background: var(--hover); box-shadow: inset 3px 0 0 var(--accent); }
+table.t td.txt { max-width: 340px; overflow: hidden; text-overflow: ellipsis; color: var(--muted); }
+table.t img { width: 40px; height: 40px; object-fit: cover; border-radius: 6px; display: block; }
+table.t td.th { width: 52px; }
+.summary { border-top: 1px solid var(--line); padding: 16px; display: grid; gap: 14px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.stat { background: var(--card2); border-radius: 10px; padding: 12px 14px; }
+.stat .k { color: var(--muted); font-size: 12.5px; }
+.stat .v { font-size: 22px; font-weight: 650; margin-top: 2px; color: var(--fg); }
+.stat .h { color: var(--muted); font-size: 11.5px; margin-top: 2px; }
+.charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 14px; }
+.chart { background: var(--card2); border-radius: 10px; padding: 12px 14px 10px; }
+.chart h3 { margin: 0 0 2px; font-size: 14px; color: var(--fg); }
+.chart .h { color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+.chart.wide { grid-column: 1 / -1; }
+.savebox { position: absolute; right: 0; top: calc(100% + 6px); z-index: 6; width: 260px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 14px 40px rgba(0,0,0,.35); padding: 10px; display: none; }
+.savebox.on { display: block; }
+.savebox .lst { display: grid; gap: 2px; max-height: 180px; overflow: auto; margin-bottom: 8px; }
+.savebox .lst button { text-align: left; border: 0; background: transparent; color: var(--fg); font: 13px system-ui, sans-serif; padding: 7px 8px; border-radius: 7px; cursor: pointer; }
+.savebox .lst button:hover { background: var(--hover); }
+.savebox .new { display: flex; gap: 6px; }
+.savebox .new input { flex: 1; min-width: 0; }
+.savebox .t { color: var(--muted); font-size: 12px; margin: 0 2px 6px; }
 svg { width: 18px; height: 18px; fill: currentColor; flex: none; }
 
 /* ---------- loading ---------- */
@@ -208,8 +258,19 @@ input.s[type=search] { width: 170px; }
     shares: (v) => compact(v),
     engagement: (v) => oneDec.format(v * 100) + " %",
     outlier: (v) => oneDec.format(v) + "x",
+    velocity: (v) => compact(v) + "/día",
     date: (v) => dateFmt.format(new Date(v)),
+    duration: (v) => (v < 60 ? Math.round(v) + " s" : Math.floor(v / 60) + ":" + String(Math.round(v % 60)).padStart(2, "0")),
   };
+  const DAY = 86400000;
+  function ago(ms) {
+    const m = Math.round((Date.now() - ms) / 60000);
+    if (m < 1) return "recién";
+    if (m < 60) return "hace " + m + " min";
+    const hh = Math.round(m / 60);
+    if (hh < 48) return "hace " + hh + " h";
+    return "hace " + Math.round(hh / 24) + " días";
+  }
 
   function pageIsDark() {
     const parse = (c) => {
@@ -234,10 +295,10 @@ input.s[type=search] { width: 170px; }
     const shadow = host.attachShadow({ mode: "open" });
     try {
       const sheet = new CSSStyleSheet();
-      sheet.replaceSync(CSS);
+      sheet.replaceSync(CSS + (FO.charts ? FO.charts.CSS : ""));
       shadow.adoptedStyleSheets = [sheet];
     } catch (_) {
-      shadow.appendChild(h("style", { text: CSS }));
+      shadow.appendChild(h("style", { text: CSS + (FO.charts ? FO.charts.CSS : "") }));
     }
     const root = h("div", { class: "fo dark" });
     shadow.appendChild(root);
@@ -299,9 +360,14 @@ input.s[type=search] { width: 170px; }
       shown: PAGE_SIZE,
       selecting: false,
       selected: new Set(),
+      view: "grid",
+      dur: "all",
+      loadInfo: null,
     };
+    const DURATIONS = { all: [null, null], short: [null, 15], mid: [15, 60], long: [60, 180], xlong: [180, null] };
 
     const titleEl = h("h1");
+    const statusLine = h("div", { class: "statusline" });
     const subEl = h("div", { class: "sub" });
     const exportBtn = h("button", { class: "b outline", onclick: (e) => { e.stopPropagation(); menu.classList.toggle("on"); } });
     const cancelSelBtn = h("button", { class: "b muted", text: "Cancelar", onclick: () => setSelecting(false) });
@@ -342,6 +408,31 @@ input.s[type=search] { width: 170px; }
     const dirBtn = h("button", { class: "b", title: "Invertir orden", onclick: () => update({ dir: currentDir() === "desc" ? "asc" : "desc" }) });
     const clearBtn = h("button", { class: "b muted", text: "Limpiar filtros", onclick: () => clearFilters() });
     const selectBtn = h("button", { class: "b", onclick: () => setSelecting(!S.selecting) }, icon("check"), "Seleccionar");
+    const viewBtns = {};
+    const viewTabs = h(
+      "div",
+      { class: "views", role: "group", "aria-label": "Vista" },
+      [["grid", "gridView", "Grilla"], ["table", "tableView", "Tabla"], ["summary", "chartView", "Resumen"]].map(([v, ic, label]) => (viewBtns[v] = h("button", { "aria-pressed": "false", onclick: () => update({ view: v }) }, icon(ic), label)))
+    );
+    const durSel = h(
+      "select",
+      { class: "s", "aria-label": "Duración", onchange: () => update({ dur: durSel.value }) },
+      [["all", "Cualquiera"], ["short", "Menos de 15 s"], ["mid", "15 a 60 s"], ["long", "1 a 3 min"], ["xlong", "Más de 3 min"]].map(([v, t]) => h("option", { value: v, text: t }))
+    );
+    // "Guardar" (select mode): add the selected posts to a collection.
+    const saveName = h("input", { class: "s", type: "text", placeholder: "Nueva colección", maxlength: "60", "aria-label": "Nombre de la colección" });
+    const saveList = h("div", { class: "lst" });
+    const saveBox = h(
+      "div",
+      { class: "savebox", onclick: (e) => e.stopPropagation() },
+      h("div", { class: "t", text: "Guardar en una colección" }),
+      saveList,
+      h("div", { class: "new" }, saveName, h("button", { class: "b outline", text: "Crear", onclick: () => saveTo(saveName.value) }))
+    );
+    saveName.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") saveTo(saveName.value);
+    });
+    const saveBtn = h("button", { class: "b", onclick: (e) => { e.stopPropagation(); openSaveBox(); } }, icon("bookmark"), "Guardar");
 
     const typeSel = h("select", { class: "s", "aria-label": "Tipo", onchange: () => update({ type: typeSel.value }) });
     const fromIn = h("input", { class: "s", type: "date", "aria-label": "Desde", onchange: () => update({ from: dayStart(fromIn.value) }) });
@@ -355,18 +446,23 @@ input.s[type=search] { width: 170px; }
       h("label", null, "Desde", fromIn),
       h("label", null, "Hasta", toIn),
       h("label", null, "Vistas mín.", minIn),
+      h("label", null, "Duración", durSel),
       qIn
     );
 
     const grid = h("div", { class: "grid" });
+    const tableBox = h("div", { class: "tablewrap" });
+    const summaryBox = h("div", { class: "summary" });
     const more = h("div", { class: "more" });
     const card = h(
       "div",
       { class: "card" },
-      h("div", { class: "head" }, h("div", { class: "grow" }, titleEl, subEl), cancelSelBtn, downloadBtn, h("div", { class: "menuwrap" }, exportBtn, menu)),
-      h("div", { class: "tools" }, filtersBtn, h("label", { class: "sortwrap" }, icon("sort"), sortSel), dirBtn, clearBtn, h("span", { class: "grow" }), selectBtn),
+      h("div", { class: "head" }, h("div", { class: "grow" }, titleEl, subEl, statusLine), cancelSelBtn, h("div", { class: "menuwrap" }, saveBtn, saveBox), downloadBtn, h("div", { class: "menuwrap" }, exportBtn, menu)),
+      h("div", { class: "tools" }, filtersBtn, h("label", { class: "sortwrap" }, icon("sort"), sortSel), dirBtn, clearBtn, h("span", { class: "grow" }), viewTabs, selectBtn),
       filtersRow,
       grid,
+      tableBox,
+      summaryBox,
       more
     );
     const results = h(
@@ -375,7 +471,12 @@ input.s[type=search] { width: 170px; }
       h(
         "div",
         { class: "wrap" },
-        h("div", { class: "topbar" }, h("button", { class: "b", onclick: () => hideResults() }, icon("back"), "Volver a la página"), h("span", { class: "brand" }, icon("rune"), "Valkiria")),
+        h(
+          "div",
+          { class: "topbar" },
+          h("button", { class: "b", onclick: () => hideResults() }, icon("back"), "Volver a la página"),
+          h("span", { class: "brand" }, h("button", { class: "b", title: "Colecciones, perfiles guardados y comparar", onclick: () => openApp() }, icon("library"), "Colecciones y comparar"), icon("rune"), "Valkiria")
+        ),
         card
       )
     );
@@ -412,6 +513,8 @@ input.s[type=search] { width: 170px; }
           from: S.from,
           to: S.to,
           minViews: S.minViews === "" ? null : Number(S.minViews),
+          minDur: DURATIONS[S.dur][0],
+          maxDur: DURATIONS[S.dur][1],
           query: S.query,
         },
         extra
@@ -423,13 +526,44 @@ input.s[type=search] { width: 170px; }
       render();
     }
     function clearFilters() {
-      update({ type: "all", from: S.baseFrom, to: S.baseTo, minViews: "", query: "" });
+      update({ type: "all", from: S.baseFrom, to: S.baseTo, minViews: "", query: "", dur: "all" });
     }
     function setSelecting(on) {
       S.selecting = on;
       if (!on) S.selected.clear();
+      saveBox.classList.remove("on");
       render();
     }
+
+    // ---- collections ----
+    async function openSaveBox() {
+      menu.classList.remove("on");
+      if (saveBox.classList.toggle("on")) {
+        const names = await FO.collections.names().catch(() => []);
+        saveList.replaceChildren(...names.map((n) => h("button", { text: n, onclick: () => saveTo(n) })));
+        if (!names.length) saveList.replaceChildren(h("div", { class: "t", text: "Todavía no tenés colecciones: escribí un nombre." }));
+        saveName.focus();
+      }
+    }
+    async function saveTo(name) {
+      name = String(name || "").trim();
+      if (!name) return saveName.focus();
+      const snap = new Map(store.snapshot(S.ctx).map((x) => [x.id, x]));
+      const items = lastList.filter((it) => S.selected.has(it.id)).map((it) => snap.get(it.id) || it);
+      const added = await FO.collections.add(name, items).catch(() => -1);
+      saveBox.classList.remove("on");
+      saveName.value = "";
+      flash(added < 0 ? "No se pudo guardar." : added + (added === 1 ? " publicación guardada" : " publicaciones guardadas") + " en «" + name + "».");
+    }
+    function openApp(tab) {
+      try {
+        chrome.runtime.sendMessage({ type: "fo:open-app", tab: tab || "" }).catch(() => {});
+      } catch (_) {
+        flash("Recargá la página: la extensión se actualizó.");
+      }
+    }
+    // Bubble phase: clicks inside the box (stopped there) keep it open, so you can type a name.
+    document.addEventListener("click", () => saveBox.classList.remove("on"));
 
     // ---- media downloads (done by the service worker) ----
     const TOP_DOWNLOADS = 100;
@@ -611,12 +745,161 @@ input.s[type=search] { width: 170px; }
           m("likes", it.likes),
           m("comments", it.comments),
           m("shares", it.shares),
+          m("velocity", it.velocity),
           m("outlier", it.outlier),
-          it.date ? h("div", { class: "d", text: fmt.date(it.date) + (it.author ? " · @" + it.author : "") }) : null
+          it.date ? h("div", { class: "d", text: fmt.date(it.date) + (it.dateEstimated ? " (estimada)" : "") + (it.duration ? " · " + fmt.duration(it.duration) : "") + (it.author ? " · @" + it.author : "") }) : null
         ),
         h("span", { class: "pick" }, icon("check"))
       );
       return el;
+    }
+
+    // ---- table view ----
+    const COLS = [
+      ["rank", "#", null],
+      ["thumb", "", null],
+      ["date", "Fecha", "newest"],
+      ["type", "Tipo", null],
+      ["views", "Vistas", "views"],
+      ["velocity", "Vistas/día", "velocity"],
+      ["likes", "Likes", "likes"],
+      ["comments", "Coment.", "comments"],
+      ["shares", "Compart.", "shares"],
+      ["engagement", "Engagement", "engagement"],
+      ["outlier", "Outlier", "outlier"],
+      ["duration", "Duración", null],
+      ["text", "Texto", null],
+    ];
+    function table(list) {
+      const head = h(
+        "tr",
+        null,
+        COLS.map(([k, label, sortKey]) =>
+          h("th", {
+            class: (k === "text" || k === "type" || k === "thumb" || k === "rank" ? "l" : "") + (sortKey && (S.sortKey === sortKey || (sortKey === "newest" && S.sortKey === "oldest")) ? " on" : ""),
+            text: label + (sortKey && (S.sortKey === sortKey || (sortKey === "newest" && S.sortKey === "oldest")) ? (currentDir() === "desc" ? " ↓" : " ↑") : ""),
+            title: sortKey ? "Ordenar por " + label.toLowerCase() : null,
+            onclick: sortKey ? () => (S.sortKey === sortKey ? update({ dir: currentDir() === "desc" ? "asc" : "desc" }) : update({ sortKey, dir: null })) : null,
+          })
+        )
+      );
+      const rows = list.map((it, i) => {
+        const thumb = U.safeUrl(it.thumb);
+        const val = (k) => (it[k] == null ? "—" : fmt[k](it[k]));
+        const tr = h(
+          "tr",
+          {
+            class: S.selected.has(it.id) ? "sel" : null,
+            onclick: () => {
+              if (S.selecting) {
+                if (S.selected.has(it.id)) S.selected.delete(it.id);
+                else S.selected.add(it.id);
+                tr.classList.toggle("sel");
+                renderHeader();
+                return;
+              }
+              const href = U.safeUrl(it.url, adapter.linkHosts);
+              if (href) window.open(href, "_blank", "noopener");
+            },
+          },
+          h("td", { class: "l", text: String(i + 1) }),
+          h("td", { class: "l th" }, thumb ? h("img", { src: thumb, loading: "lazy", alt: "" }) : null),
+          h("td", { text: it.date ? fmt.date(it.date) + (it.dateEstimated ? "*" : "") : "—", title: it.dateEstimated ? "Fecha estimada a partir del número de la publicación" : null }),
+          h("td", { class: "l", text: TYPE_NAMES[it.type] || it.type }),
+          h("td", { text: val("views") }),
+          h("td", { text: val("velocity") }),
+          h("td", { text: val("likes") }),
+          h("td", { text: val("comments") }),
+          h("td", { text: val("shares") }),
+          h("td", { text: val("engagement") }),
+          h("td", { text: val("outlier") }),
+          h("td", { text: val("duration") }),
+          h("td", { class: "l txt", text: (it.text || "").replace(/\s+/g, " ").slice(0, 120) })
+        );
+        return tr;
+      });
+      return h("table", { class: "t" }, h("thead", null, head), h("tbody", null, rows));
+    }
+
+    // ---- summary view ----
+    function stat(k, v, hint) {
+      return h("div", { class: "stat" }, h("div", { class: "k", text: k }), h("div", { class: "v", text: v }), hint ? h("div", { class: "h", text: hint }) : null);
+    }
+    function chartCard(title, hint, body, wide) {
+      return h("div", { class: "chart" + (wide ? " wide" : "") }, h("h3", { text: title }), hint ? h("div", { class: "h", text: hint }) : null, body);
+    }
+    function summary(list) {
+      const st = FO.stats.summarize(list);
+      const metricName = st.metric === "views" ? "vistas" : "likes";
+      const fmtM = (v) => compact(Math.round(v));
+      const parts = [
+        h(
+          "div",
+          { class: "tiles" },
+          stat("Publicaciones", full.format(st.count), st.first ? "del " + fmt.date(st.first) + " al " + fmt.date(st.last) : null),
+          stat("Mediana de " + metricName, st.medianMetric == null ? "—" : fmtM(st.medianMetric), "la mitad está por encima"),
+          stat("Vistas por día", st.medianVelocity == null ? "—" : fmt.velocity(st.medianVelocity), "mediana desde que se publicó"),
+          stat("Engagement", st.medianEngagement == null ? "—" : fmt.engagement(st.medianEngagement), "mediana de (likes + comentarios) / vistas"),
+          stat("Frecuencia", st.postsPerWeek == null ? "—" : oneDec.format(st.postsPerWeek), (st.postsPerWeek == null ? "" : "publicaciones por semana") + (st.lastPostDaysAgo == null ? "" : " · última " + ago(Date.now() - st.lastPostDaysAgo * DAY)))
+        ),
+      ];
+      const charts = h("div", { class: "charts" });
+      // Chart widths from the real layout (two columns when there is room), so text keeps its size.
+      const inner = Math.max(300, (summaryBox.clientWidth || 900) - 32);
+      const cols = inner >= 2 * 330 + 14 ? 2 : 1;
+      const wideW = inner - 28;
+      const halfW = (inner - (cols - 1) * 14) / cols - 28;
+      if (st.timeline.length >= 2) {
+        charts.append(
+          chartCard(
+            "Cada publicación en el tiempo",
+            metricName.charAt(0).toUpperCase() + metricName.slice(1) + " por publicación, escala logarítmica. Tocá un punto para abrirla.",
+            FO.charts.scatter(st.timeline, {
+              width: wideW,
+              title: metricName + " por publicación en el tiempo",
+              fmt: fmtM,
+              fmtDate: (x) => fmt.date(x),
+              onOpen: (it) => {
+                const href = U.safeUrl(it.url, adapter.linkHosts);
+                if (href) window.open(href, "_blank", "noopener");
+              },
+            }),
+            true
+          )
+        );
+      }
+      const dayName = { lun: "lunes", mar: "martes", "mié": "miércoles", jue: "jueves", vie: "viernes", "sáb": "sábado", dom: "domingo" };
+      charts.append(
+        chartCard("Según el día de publicación", "Mediana de " + metricName + " de lo publicado cada día.", FO.charts.columns(st.byWeekday, { width: halfW, fmt: fmtM, title: "Mediana de " + metricName + " por día", titleFor: (r) => dayName[r.label] || r.label })),
+        chartCard("Según la hora de publicación", "Mediana de " + metricName + " por hora (hora de tu compu).", FO.charts.columns(st.byHour, { width: halfW, fmt: fmtM, labelEvery: 3, title: "Mediana de " + metricName + " por hora", titleFor: (r) => r.label + ":00 a " + r.label + ":59" }))
+      );
+      if (st.hashtags.length) {
+        charts.append(
+          chartCard(
+            "Hashtags que mejor rinden",
+            "Mediana de " + metricName + " de las publicaciones con cada hashtag (cantidad entre paréntesis).",
+            FO.charts.rows(st.hashtags.map((t) => ({ label: t.label, value: t.value, note: "(" + t.n + ")" })), { fmt: fmtM })
+          )
+        );
+      }
+      parts.push(charts);
+      if (st.estimatedDates) parts.push(h("div", { class: "h", style: null, text: "* Algunas fechas son estimadas a partir del número de la publicación, porque la red no las mandó." }));
+      if (!list.length) return [h("div", { class: "empty", text: "Ninguna publicación coincide con los filtros." })];
+      return parts;
+    }
+
+    function renderStatus() {
+      const li = S.loadInfo;
+      const parts = [];
+      if (li && li.at) parts.push(h("span", { text: (li.fromCache ? "Datos guardados " : "Cargado ") + ago(li.at) }));
+      if (li && li.message && !li.fromCache) parts.push(h("span", { class: li.reason === "ratelimit" || li.reason === "error" || li.reason === "timeout" ? "warn" : null, text: li.message }));
+      if (opts.onRefresh) parts.push(h("button", { title: "Vuelve a cargar las publicaciones desde la red", onclick: () => refresh() }, icon("refresh"), "Actualizar datos"));
+      statusLine.replaceChildren(...parts);
+    }
+    function refresh() {
+      const filter = S.limit ? { mode: "posts", limit: S.limit } : S.baseFrom != null || S.baseTo != null ? { mode: "date", preset: "custom", from: S.baseFrom, to: S.baseTo } : { mode: "posts", limit: 0 };
+      hideResults();
+      opts.onRefresh({ sortKey: S.sortKey, filter });
     }
 
     let lastList = [];
@@ -640,6 +923,9 @@ input.s[type=search] { width: 170px; }
       cancelSelBtn.style.display = S.selecting ? "" : "none";
       selectBtn.classList.toggle("on", S.selecting);
       card.classList.toggle("selecting", S.selecting);
+      saveBtn.style.display = S.selecting ? "" : "none";
+      saveBtn.disabled = selN === 0;
+      for (const v in viewBtns) viewBtns[v].setAttribute("aria-pressed", String(S.view === v));
     }
 
     function render() {
@@ -651,18 +937,30 @@ input.s[type=search] { width: 170px; }
       toIn.value = toInput(S.to);
       if (minIn.value !== String(S.minViews)) minIn.value = S.minViews;
       if (qIn.value !== S.query) qIn.value = S.query;
+      durSel.value = S.dur;
       const all = store.query({ ctx: S.ctx, limit: S.limit, from: S.baseFrom, to: S.baseTo, sortKey: "feed" });
       renderTypeOptions(all);
       lastList = store.query(queryOpts());
       const visible = lastList.slice(0, S.shown);
       const tall = visible.length && visible.filter((i) => i.type === "reel" || i.type === "video").length / visible.length >= 0.7;
       grid.classList.toggle("tall", !!tall);
-      grid.replaceChildren(...visible.map((it, i) => tile(it, i + 1)));
-      if (!all.length) grid.replaceChildren(h("div", { class: "empty", text: "No se encontraron publicaciones en esta página. Abrí un perfil, una búsqueda o un hashtag y probá de nuevo." }));
-      else if (!lastList.length) grid.replaceChildren(h("div", { class: "empty", text: "Ninguna publicación coincide con los filtros." }));
+      grid.style.display = S.view === "grid" ? "" : "none";
+      tableBox.style.display = S.view === "table" ? "" : "none";
+      summaryBox.style.display = S.view === "summary" ? "" : "none";
+      grid.replaceChildren();
+      tableBox.replaceChildren();
+      summaryBox.replaceChildren();
+      if (S.view === "grid") grid.replaceChildren(...visible.map((it, i) => tile(it, i + 1)));
+      else if (S.view === "table") tableBox.replaceChildren(table(visible));
+      else summaryBox.replaceChildren(...summary(lastList));
+      const target = S.view === "grid" ? grid : S.view === "table" ? tableBox : summaryBox;
+      if (!all.length) target.replaceChildren(h("div", { class: "empty", text: "No se encontraron publicaciones en esta página. Abrí un perfil, una búsqueda o un hashtag y probá de nuevo." }));
+      else if (!lastList.length) target.replaceChildren(h("div", { class: "empty", text: "Ninguna publicación coincide con los filtros." }));
+      renderStatus();
       more.replaceChildren();
-      more.style.display = lastList.length > visible.length ? "" : "none";
-      if (lastList.length > visible.length) {
+      const paged = S.view !== "summary" && lastList.length > visible.length;
+      more.style.display = paged ? "" : "none";
+      if (paged) {
         more.append(h("button", { class: "b outline", text: "Mostrar " + Math.min(PAGE_SIZE, lastList.length - visible.length) + " más", onclick: () => { S.shown += PAGE_SIZE; render(); } }));
       }
       renderHeader();
@@ -682,6 +980,8 @@ input.s[type=search] { width: 170px; }
         baseFrom: params.from == null ? null : params.from,
         baseTo: params.to == null ? null : params.to,
         noun: params.noun || "publicaciones",
+        loadInfo: params.loadInfo || null,
+        dur: "all",
         type: "all",
         minViews: "",
         query: "",
@@ -725,7 +1025,7 @@ input.s[type=search] { width: 170px; }
       showResults,
       hideResults,
       isOpen: () => S.open,
-      lastParams: () => (S.ctx == null ? null : { ctx: S.ctx, sortKey: S.sortKey, limit: S.limit, from: S.baseFrom, to: S.baseTo, noun: S.noun }),
+      lastParams: () => (S.ctx == null ? null : { ctx: S.ctx, sortKey: S.sortKey, limit: S.limit, from: S.baseFrom, to: S.baseTo, noun: S.noun, loadInfo: S.loadInfo }),
     };
   };
 })(typeof globalThis !== "undefined" ? globalThis : this);

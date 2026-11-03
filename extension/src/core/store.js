@@ -58,6 +58,7 @@
       if (k === "ctxs" || k === "seq") continue;
       const v = src[k];
       if (v === null || v === undefined) continue;
+      if (k === "date") target.dateEstimated = false; // a real date replaces an estimate
       if (Array.isArray(v) && !v.length && Array.isArray(target[k]) && target[k].length) continue; // keep known files
       if (METRICS.includes(k) && typeof target[k] === "number" && typeof v === "number") {
         target[k] = Math.max(target[k], v); // counts only grow; keep the freshest (largest)
@@ -133,8 +134,30 @@
     return out.sort((a, b) => a.seq - b.seq);
   };
 
+  const DAY = 86400000;
+
+  /**
+   * Posts that arrive without a date (e.g. Instagram's reels tab) get one estimated from their id.
+   * The estimate is calibrated with the posts of the same network that have both: the median
+   * difference corrects any systematic error in the id formula.
+   */
+  Store.prototype._estimateDates = function () {
+    const diffs = {};
+    for (const it of this.items.values()) {
+      if (it.date != null && !it.dateEstimated && it.idTime != null) (diffs[it.platform] = diffs[it.platform] || []).push(it.date - it.idTime);
+    }
+    for (const it of this.items.values()) {
+      if ((it.date == null || it.dateEstimated) && it.idTime != null) {
+        const d = diffs[it.platform];
+        it.date = it.idTime + (d && d.length ? median(d) : 0);
+        it.dateEstimated = true;
+      }
+    }
+  };
+
   // sortKey -> [field, default direction]
   const SORTS = {
+    velocity: ["velocity", "desc"],
     views: ["views", "desc"],
     likes: ["likes", "desc"],
     comments: ["comments", "desc"],
@@ -155,18 +178,24 @@
    */
   Store.prototype.query = function (opts) {
     const o = opts || {};
+    this._estimateDates();
     let base = this.inCtx(o.ctx);
     if (o.limit) base = base.slice(0, o.limit);
     // The date range defines the set of posts being compared, so it also defines the outlier baseline.
     if (o.from != null) base = base.filter((it) => it.date != null && it.date >= o.from);
     if (o.to != null) base = base.filter((it) => it.date != null && it.date <= o.to);
     assignOutliers(base);
+    // Velocity = views per day since it was posted (at least one day, so new posts don't explode).
+    const now = o.now || Date.now();
+    for (const it of base) it.velocity = it.views != null && it.date != null ? it.views / Math.max(1, (now - it.date) / DAY) : null;
     const q = (o.query || "").trim().toLowerCase();
     const out = [];
     for (const it of base) {
       if (o.ids && !o.ids.has(it.id)) continue;
       if (o.type && o.type !== "all" && it.type !== o.type) continue;
       if (o.minViews != null && o.minViews > 0 && (it.views == null || it.views < o.minViews)) continue;
+      if (o.minDur != null && (it.duration == null || it.duration < o.minDur)) continue;
+      if (o.maxDur != null && (it.duration == null || it.duration >= o.maxDur)) continue;
       if (q) {
         const hay = ((it.text || "") + " " + (it.author || "") + " @" + (it.author || "")).toLowerCase();
         if (!hay.includes(q)) continue;
@@ -185,6 +214,19 @@
       return (va - vb) * sign;
     });
     return out;
+  };
+
+  // ---- saving / restoring a page's posts (see cache.js) ----
+  const KEEP = ["id", "pk", "platform", "url", "author", "text", "thumb", "date", "dateEstimated", "idTime", "type", "views", "likes", "comments", "shares", "saves", "duration", "media"];
+  Store.prototype.snapshot = function (ctx) {
+    return this.inCtx(ctx).map((it) => {
+      const o = {};
+      for (const k of KEEP) if (it[k] !== undefined && it[k] !== null) o[k] = k === "text" && it.text.length > 500 ? it.text.slice(0, 500) : it[k];
+      return o;
+    });
+  };
+  Store.prototype.restore = function (items, ctx) {
+    return this.add(items.filter((it) => it && it.id && it.url), [], ctx);
   };
 
   FO.Store = Store;

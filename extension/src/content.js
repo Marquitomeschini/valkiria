@@ -56,7 +56,7 @@
     if (name !== "html") {
       try {
         // API paths (/graphql/query, /api/v1/...) hold no account names; only ids are hidden.
-        path = new URL(url).pathname.replace(/\/\d+(?=\/|$)/g, "/<id>");
+        path = apiPath(url);
       } catch (_) {}
     }
     diag.push({
@@ -76,10 +76,34 @@
 
   let responsesSeen = 0;
   let lastLoad = null;
-  function ingest(text, url, name) {
+  const WAIT_TEXT = /wait a few minutes|rate limit|too many requests|try again later|please wait|espera unos minutos/i;
+  const MORE_KEYS = ["has_next_page", "more_available", "hasMore", "has_more"];
+  let rateLimited = null; // { at, status } when the site asked to slow down
+  const moreFlag = {}; // ctx -> { more: boolean, at } from the site's own pagination
+  function moreSignal(doc) {
+    return FO.util.deepFind(doc, (k, v) => (MORE_KEYS.includes(k) && (typeof v === "boolean" || v === 0 || v === 1) ? Boolean(v) : undefined));
+  }
+  function apiPath(url) {
+    try {
+      return new URL(url).pathname.replace(/\/\d+(?=\/|$)/g, "/<id>");
+    } catch (_) {
+      return "";
+    }
+  }
+
+  function ingest(text, url, name, status) {
     if (url && name !== "html") responsesSeen++;
-    const docs = FO.util.parsePayload(text);
     const ctx = getCtx();
+    if (status && status >= 400) {
+      const limited = status === 429 || WAIT_TEXT.test(text || "");
+      if (limited) rateLimited = { at: Date.now(), status };
+      if (url) {
+        diag.push({ t: new Date().toISOString().slice(11, 19), path: apiPath(url), name: name || null, status, rateLimited: limited });
+        if (diag.length > 40) diag.shift();
+      }
+      return;
+    }
+    const docs = FO.util.parsePayload(text);
     let own = 0;
     let others = 0;
     let partials = 0;
@@ -90,6 +114,11 @@
       const theirs = [];
       for (const it of r.items) (FO.belongsTo(it, platform, ctx) ? mine : theirs).push(it);
       if (mine.length || r.partials.length) store.add(mine, r.partials, ctx);
+      if (mine.length) {
+        const more = moreSignal(doc);
+        if (more !== undefined) moreFlag[ctx] = { more, at: Date.now() };
+      }
+      if (doc && doc.status === "fail" && WAIT_TEXT.test(String(doc.message || ""))) rateLimited = { at: Date.now(), status: 200 };
       if (theirs.length) store.add(theirs, [], "otros:" + ctx);
       own += mine.length;
       others += theirs.length;
@@ -102,7 +131,7 @@
   document.addEventListener("valkiria:data", (e) => {
     try {
       const msg = JSON.parse(e.detail);
-      if (msg && typeof msg.text === "string") ingest(msg.text, msg.url, msg.name);
+      if (msg && typeof msg.text === "string") ingest(msg.text, msg.url, msg.name, msg.status);
     } catch (_) {}
   });
   const sayReady = () => document.dispatchEvent(new CustomEvent("valkiria:ready"));
@@ -180,6 +209,7 @@
       this.running = true;
       this.stopRequested = false;
       const MAX_IDLE = 6;
+      const MAX_MS = 20 * 60 * 1000; // safety cap: never load for more than 20 minutes
       let idle = 0;
       let reason = "end";
       const t0load = Date.now();
@@ -217,6 +247,18 @@
             reason = "date";
             break;
           }
+          if (moreFlag[ctx] && moreFlag[ctx].more === false) {
+            reason = "end-signal"; // the site itself says there are no more posts
+            break;
+          }
+          if (rateLimited && rateLimited.at >= t0load) {
+            reason = "ratelimit";
+            break;
+          }
+          if (Date.now() - t0load > MAX_MS) {
+            reason = "timeout";
+            break;
+          }
           const sc = document.scrollingElement || document.documentElement;
           const inner = biggestScroller();
           rounds++;
@@ -229,19 +271,24 @@
           window.scrollTo(0, sc.scrollHeight);
           if (inner) inner.scrollTop = inner.scrollHeight;
           // Wait for the next batch (or give up on this round after 2.5 s).
+          const heightBefore = Math.max(sc.scrollHeight, inner ? inner.scrollHeight : 0);
           const t0 = Date.now();
           let grew = false;
           while (Date.now() - t0 < 2500 && !this.stopRequested) {
             await sleep(120);
-            if (store.count(ctx) > before) {
-              grew = true;
+            if (store.count(ctx) > before || (moreFlag[ctx] && moreFlag[ctx].more === false) || (rateLimited && rateLimited.at >= t0load)) {
+              grew = store.count(ctx) > before;
               break;
             }
           }
-          if (grew) {
+          if (grew) await sleep(300); // let the page add the new rows
+          // Real progress = new posts AND a longer page. Posts that arrive while the page stays
+          // the same (things loaded in the background at the end of a profile) don't count, so a
+          // finished feed can't keep the loader going forever.
+          const heightAfter = Math.max(sc.scrollHeight, inner ? inner.scrollHeight : 0);
+          if (grew && heightAfter > heightBefore) {
             idle = 0;
             respAtLastPost = responsesSeen;
-            await sleep(300); // let the page add the new rows before scrolling again
           } else {
             idle++;
           }
@@ -288,6 +335,25 @@
     return out;
   }
 
+  const LOAD_MESSAGES = {
+    end: "La red dejó de mandar publicaciones (puede que estén todas).",
+    "end-signal": "Llegó al final: no hay más publicaciones.",
+    limit: "Llegó a la cantidad que pediste.",
+    date: "Llegó a la fecha que pediste.",
+    stopped: "Carga detenida.",
+    ratelimit: "La red pidió esperar unos minutos: se muestra lo que llegó a cargar. Probá de nuevo más tarde.",
+    timeout: "Se cortó a los 20 minutos para no abusar de la red.",
+    error: "Hubo un problema durante la carga: se muestra lo que llegó a cargar.",
+    cache: "Datos guardados.",
+  };
+  const loadInfo = {}; // ctx -> { reason, message, at, fromCache }
+  const restored = new Set(); // contexts already merged with their saved copy
+
+  async function saveCache(ctx, reason) {
+    const complete = reason === "end" || reason === "end-signal" || !!(loadState[ctx] && loadState[ctx].end);
+    await FO.cache.save(platform, ctx, ctxLabel(ctx), store.snapshot(ctx), { complete });
+  }
+
   async function run(msg) {
     if (loader.running) {
       pendingSort = msg.sortKey; // a new sort chosen while loading: use it when loading ends
@@ -295,30 +361,60 @@
     }
     const ctx = getCtx();
     const q = resolveFilter(msg.filter);
-    const st = loadState[ctx] || {};
-    const have = store.count(ctx);
-    const satisfied = st.end || (q.limit && have >= q.limit) || (q.from != null && st.reachedFrom != null && st.reachedFrom <= q.from);
     pendingSort = null;
-    if (!satisfied) {
-      ui.showLoading();
-      const reason = await loader.load({
-        ctx,
-        limit: q.limit || 5000,
-        from: q.from,
-        onProgress: (n, frac) => ui.updateLoading(n, frac, noun()),
-      });
+    let reason = null;
+    try {
+      // A page saved earlier opens instantly ("Actualizar datos" loads it again). Sites like
+      // Instagram embed their first posts in the page, so restore whenever the saved copy has more.
+      if (!msg.force && !restored.has(ctx)) {
+        restored.add(ctx);
+        const saved = await FO.cache.load(platform, ctx).catch(() => null);
+        if (saved && saved.items && saved.items.length > store.count(ctx)) {
+          store.restore(saved.items, ctx);
+          if (saved.complete) loadState[ctx] = { end: true };
+          loadInfo[ctx] = { reason: "cache", message: LOAD_MESSAGES.cache, at: saved.savedAt, fromCache: true };
+        }
+      }
+      if (msg.force) {
+        loadState[ctx] = {};
+        delete moreFlag[ctx];
+      }
+      const st = loadState[ctx] || {};
+      const have = store.count(ctx);
+      const satisfied = !msg.force && (st.end || (q.limit && have >= q.limit) || (q.from != null && st.reachedFrom != null && st.reachedFrom <= q.from));
+      if (!satisfied) {
+        ui.showLoading();
+        try {
+          reason = await loader.load({
+            ctx,
+            limit: q.limit || 5000,
+            from: q.from,
+            onProgress: (n, frac) => ui.updateLoading(n, frac, noun()),
+          });
+        } catch (e) {
+          console.warn("Valkiria: loading failed", e);
+          reason = "error";
+        }
+        if (reason === "nav") return;
+        if (reason === "end" || reason === "end-signal") loadState[ctx] = { end: true };
+        else if (reason === "date") loadState[ctx] = Object.assign({}, st, { reachedFrom: Math.min(q.from, st.reachedFrom ?? Infinity) });
+        loadInfo[ctx] = { reason, message: LOAD_MESSAGES[reason] || "", at: Date.now(), fromCache: false };
+        saveCache(ctx, reason).catch(() => {});
+      }
+    } finally {
+      // Whatever happened, never leave the "loading" notice on screen.
       ui.hideLoading();
-      if (reason === "nav") return;
-      if (reason === "end") loadState[ctx] = { end: true };
-      else if (reason === "date") loadState[ctx] = Object.assign({}, st, { reachedFrom: Math.min(q.from, st.reachedFrom ?? Infinity) });
     }
     window.scrollTo(0, 0);
-    ui.showResults({ ctx, sortKey: pendingSort || msg.sortKey, limit: q.limit, from: q.from, to: q.to, noun: noun() });
+    ui.showResults({ ctx, sortKey: pendingSort || msg.sortKey, limit: q.limit, from: q.from, to: q.to, noun: noun(), loadInfo: loadInfo[ctx] || null });
   }
 
-  function status() {
+  async function status() {
     const ctx = getCtx();
     const last = ui.lastParams();
+    let saved = null;
+    const c = await FO.cache.info(platform, ctx).catch(() => null);
+    if (c && c.count > store.count(ctx)) saved = { count: c.count, savedAt: c.savedAt, complete: !!c.complete };
     return {
       ok: true,
       platform,
@@ -328,11 +424,19 @@
       running: loader.running,
       noun: noun(),
       hasResults: !!(last && last.ctx === ctx),
+      saved,
+      loadInfo: loadInfo[ctx] || null,
     };
   }
 
   // ---- UI ----
-  const ui = FO.createUI({ platform, store, getCtx, onStop: () => loader.stop() });
+  const ui = FO.createUI({
+    platform,
+    store,
+    getCtx,
+    onStop: () => loader.stop(),
+    onRefresh: (params) => run({ sortKey: params.sortKey, filter: params.filter, force: true }),
+  });
 
   function onReady() {
     ui.mount();
@@ -357,7 +461,10 @@
   try {
     chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       if (!msg || typeof msg.type !== "string") return;
-      if (msg.type === "fo:status") sendResponse(status());
+      if (msg.type === "fo:status") {
+        status().then(sendResponse, () => sendResponse(null));
+        return true; // answered asynchronously
+      }
       else if (msg.type === "fo:run") {
         run(msg);
         sendResponse({ ok: true });
@@ -380,6 +487,8 @@
               total: store.count(),
               loading: loader.running,
               lastLoad,
+              moreSignal: moreFlag[ctx] || null,
+              rateLimited,
               responses: diag,
             },
             null,
