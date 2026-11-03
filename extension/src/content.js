@@ -21,6 +21,7 @@
   const diag = [];
   function shapeOf(o, depth) {
     if (Array.isArray(o)) return o.length ? [shapeOf(o[0], depth)] : [];
+    if (typeof o === "boolean") return o; // e.g. has_next_page: true/false (not personal data)
     if (!o || typeof o !== "object") return typeof o;
     if (depth <= 0) return "{…}";
     const out = {};
@@ -54,7 +55,8 @@
     let path = "(html de la página)";
     if (name !== "html") {
       try {
-        path = pathPattern(new URL(url).pathname);
+        // API paths (/graphql/query, /api/v1/...) hold no account names; only ids are hidden.
+        path = new URL(url).pathname.replace(/\/\d+(?=\/|$)/g, "/<id>");
       } catch (_) {}
     }
     diag.push({
@@ -66,13 +68,16 @@
       own,
       others,
       partials,
-      topKeys: docs[0] && typeof docs[0] === "object" ? shapeOf(docs[0], 3) : null,
+      topKeys: docs[0] && typeof docs[0] === "object" ? shapeOf(docs[0], 5) : null,
       samples: own + others === 0 ? docs.slice(0, 2).flatMap(postSamples) : [],
     });
     if (diag.length > 40) diag.shift();
   }
 
+  let responsesSeen = 0;
+  let lastLoad = null;
   function ingest(text, url, name) {
+    if (url && name !== "html") responsesSeen++;
     const docs = FO.util.parsePayload(text);
     const ctx = getCtx();
     let own = 0;
@@ -177,6 +182,11 @@
       const MAX_IDLE = 6;
       let idle = 0;
       let reason = "end";
+      const t0load = Date.now();
+      const respStart = responsesSeen;
+      let respAtLastPost = responsesSeen;
+      let rounds = 0;
+      const heights = [];
       const progress = () => {
         const n = store.count(ctx);
         let frac = null;
@@ -209,6 +219,9 @@
           }
           const sc = document.scrollingElement || document.documentElement;
           const inner = biggestScroller();
+          rounds++;
+          heights.push(sc.scrollHeight);
+          if (heights.length > 8) heights.shift();
           // A small step back up re-triggers "near the bottom" observers on some sites.
           window.scrollBy(0, -300);
           if (inner) inner.scrollTop -= 300;
@@ -227,6 +240,7 @@
           }
           if (grew) {
             idle = 0;
+            respAtLastPost = responsesSeen;
             await sleep(300); // let the page add the new rows before scrolling again
           } else {
             idle++;
@@ -239,6 +253,16 @@
         }
       } finally {
         this.running = false;
+        lastLoad = {
+          reason, // end = no new posts for 6 rounds; limit; date; stopped; nav
+          posts: store.count(ctx),
+          seconds: Math.round((Date.now() - t0load) / 1000),
+          rounds,
+          responsesDuringLoad: responsesSeen - respStart,
+          responsesAfterLastNewPost: responsesSeen - respAtLastPost,
+          pageHeightLastRounds: heights,
+          scroller: (document.scrollingElement || document.documentElement).scrollHeight > innerHeight + 50 ? "window" : "inner",
+        };
       }
       return reason;
     },
@@ -355,6 +379,7 @@
               otherAccounts: store.count("otros:" + ctx),
               total: store.count(),
               loading: loader.running,
+              lastLoad,
               responses: diag,
             },
             null,

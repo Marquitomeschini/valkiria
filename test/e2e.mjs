@@ -457,6 +457,7 @@ for (const P of PLATFORMS) {
           }
         })
       );
+      if (process.env.DUMPDIAG) (await import("node:fs")).writeFileSync(process.env.DUMPDIAG, JSON.stringify(d, null, 1));
       assert.equal(d.posts, exp.length, "diagnostic: posts");
       assert.equal(d.otherAccounts, 4, "diagnostic: recommended reels from other accounts set apart");
       assert.ok(d.responses.length >= PAGES, "diagnostic: responses");
