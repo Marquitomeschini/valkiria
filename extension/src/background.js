@@ -174,6 +174,7 @@ chrome.downloads.onChanged.addListener((delta) => {
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg && msg.type === "fo:offscreen-ready") return markOffscreenReady();
+  if (msg && msg.type === "fo:apply-update" && !sender.tab) return void checkForUpdate();
   if (!msg || !sender.tab) return; // other messages from the offscreen page (pings) only keep us awake
   if (msg.type === "fo:download") {
     const isHttps = (u) => typeof u === "string" && /^https:\/\//.test(u);

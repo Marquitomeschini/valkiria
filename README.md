@@ -10,7 +10,37 @@ compartidos, engagement, outlier score o fecha. Incluye carga automática, filtr
 
 Es de uso personal: no está publicada en la Chrome Web Store, así que se instala a mano.
 
-## Instalación paso a paso
+## Instalación en Windows: instalador de un clic (recomendado)
+
+1. Descargá **`instalar-valkiria.cmd`** (está en la raíz del repositorio:
+   <https://github.com/Marquitomeschini/valkiria>).
+2. Hacé doble clic. Si Windows muestra "Windows protegió su PC", tocá **Más información** →
+   **Ejecutar de todas formas**: pasa con cualquier archivo descargado que no sea de una empresa
+   conocida.
+3. El instalador baja Valkiria a `C:\Users\<tu usuario>\Valkiria`, activa las actualizaciones
+   automáticas, copia la ruta de la extensión y abre `brave://extensions`.
+4. En Brave, una sola vez:
+   1. Activá **Modo de desarrollador** (arriba a la derecha).
+   2. Si tenías otra Valkiria (o FeedOrden) cargada, tocá **Quitar** en su tarjeta.
+   3. Tocá **Cargar descomprimida**. En la ventana, hacé clic en la barra de arriba (donde dice la
+      carpeta), pegá con **Ctrl+V**, apretá **Enter** y tocá **Seleccionar carpeta**.
+5. Fijá el escudo: pieza de rompecabezas → pin al lado de Valkiria.
+
+### Actualizaciones
+
+No tenés que hacer nada. Cada 15 minutos Windows revisa si hay una versión nueva en GitHub; si la
+hay, la baja y en menos de un minuto Valkiria se recarga sola. El escudo muestra **NEW** y el
+popup avisa a qué versión se actualizó. Después recargá las pestañas de las redes que tengas
+abiertas.
+
+- **En el popup:** abajo dice tu versión y tiene un botón **Buscar actualización**.
+- **En la carpeta `Valkiria`:** "Actualizar ahora" busca en el momento y "Desactivar
+  actualizaciones" las apaga (para volver a activarlas, ejecutá otra vez el instalador).
+- **Para ver el último resultado:** `Valkiria\actualizador\ultimo-resultado.txt`.
+- Si alguna vez la extensión no se recarga sola, tocá **recargar** en su tarjeta en
+  `brave://extensions`.
+
+## Instalación a mano (otros sistemas o sin el instalador)
 
 ### 1. Guardá la carpeta en un lugar fijo
 
@@ -69,40 +99,6 @@ Es de uso personal: no está publicada en la Chrome Web Store, así que se insta
   extensiones instaladas a mano. Cerralo sin tocar **Inhabilitar** y la extensión sigue activa.
 - **El escudo dice "Abrí un perfil…" estando en Instagram:** recargá la pestaña. Las pestañas que
   ya estaban abiertas antes de instalar no tienen la extensión cargada.
-
-### Actualización automática (Windows)
-
-Valkiria puede actualizarse sola: el código vive en un repositorio privado de GitHub, una tarea
-programada de Windows lo sincroniza cada hora y la extensión se recarga sola cuando llega una
-versión nueva. Se configura una sola vez:
-
-1. **Instalá Git.** En PowerShell: `winget install --id Git.Git -e`, o descargalo de
-   <https://git-scm.com/download/win> (siguiente, siguiente, finalizar).
-2. **Si ya tenías Valkiria instalada desde el zip:** en `brave://extensions` tocá **Quitar** en
-   su tarjeta y borrá la carpeta `Documentos\valkiria`.
-3. **Descargá el repositorio.** Abrí PowerShell y pegá (cambiando `TU_USUARIO`):
-
-   ```powershell
-   git clone https://github.com/TU_USUARIO/valkiria.git "$env:USERPROFILE\valkiria"
-   explorer "$env:USERPROFILE\valkiria"
-   ```
-
-   Queda en `C:\Users\<tu usuario>\valkiria` (fuera de Documentos, para que OneDrive no la
-   toque). La primera vez se abre una ventana para iniciar sesión en GitHub; después ya no la
-   vuelve a pedir.
-4. **Cargala en el navegador** como en el paso 2 de la instalación: **Cargar descomprimida** →
-   `C:\Users\<tu usuario>\valkiria\extension`.
-5. **Activá las actualizaciones:** en esa misma carpeta `valkiria`, entrá a `tools\windows` y
-   hacé doble clic en **`activar-actualizaciones.cmd`**. Dice "Listo" y se cierra con una tecla.
-
-Desde ahí, cada hora Windows trae la última versión sin abrir ventanas, y en menos de un minuto
-Valkiria se recarga sola. El escudo muestra **NEW** y el popup avisa a qué versión se actualizó.
-Después recargá las pestañas de las redes que tengas abiertas.
-
-- **Para actualizar en el momento:** `tools\windows\actualizar-ahora.cmd`.
-- **Para que deje de actualizarse:** `tools\windows\desactivar-actualizaciones.cmd`.
-- Si alguna vez la extensión no se recarga sola, tocá **recargar** en su tarjeta en
-  `brave://extensions`.
 
 ### Actualizar a mano (instalación desde el zip)
 

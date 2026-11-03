@@ -109,6 +109,26 @@ $("sorts").addEventListener("click", async (e) => {
   refresh();
 });
 $("show").addEventListener("click", () => send({ type: "fo:show" }));
+
+// ---- version and updates (the Windows installer syncs the folder; Valkiria reloads itself) ----
+const REPO = "Marquitomeschini/valkiria";
+$("ver").textContent = "Versión " + chrome.runtime.getManifest().version + " ·";
+$("checkupd").addEventListener("click", async () => {
+  const msg = $("updmsg");
+  msg.textContent = "Buscando…";
+  const running = chrome.runtime.getManifest().version;
+  const read = (url) => fetch(url, { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+  const latest = await read("https://raw.githubusercontent.com/" + REPO + "/main/extension/manifest.json");
+  if (!latest || !latest.version) return (msg.textContent = "No pude consultar GitHub. Probá de nuevo en un rato.");
+  if (latest.version === running) return (msg.textContent = "Tenés la última versión.");
+  const disk = await read(chrome.runtime.getURL("manifest.json"));
+  if (disk && disk.version !== running) {
+    msg.textContent = "Aplicando la versión " + disk.version + "…";
+    chrome.runtime.sendMessage({ type: "fo:apply-update" }).catch(() => {});
+    return;
+  }
+  msg.textContent = "Hay una versión nueva (" + latest.version + "). Se instala sola en menos de 15 minutos, o abrí la carpeta Valkiria y hacé doble clic en «Actualizar ahora».";
+});
 $("diag").addEventListener("click", async () => {
   const res = await send({ type: "fo:diag" });
   if (!res || !res.ok) return ($("diagmsg").textContent = "No se pudo leer la página.");

@@ -426,3 +426,28 @@ test("self-update: reloads when the folder on disk has a new version, never duri
   assert.deepEqual(plain(calls.stored.fo_updated).from, "1.0.0");
   assert.deepEqual(plain(calls.stored.fo_updated).to, "1.1.0");
 });
+
+test("Windows installer files: plain ASCII with CRLF, one PowerShell marker, same repository everywhere", () => {
+  const root = path.join(here, "..");
+  const files = ["instalar-valkiria.cmd", "tools/windows/actualizador/actualizar.ps1", "tools/windows/actualizador/actualizar.vbs", "tools/windows/carpeta/Actualizar ahora.cmd", "tools/windows/carpeta/Desactivar actualizaciones.cmd"];
+  for (const f of files) {
+    const buf = readFileSync(path.join(root, f));
+    assert.ok(buf.every((b) => b < 128), f + " must be ASCII (cmd and Windows PowerShell 5.1)");
+    const text = buf.toString("ascii");
+    assert.equal((text.match(/\r\n/g) || []).length, (text.match(/\n/g) || []).length, f + " must use CRLF");
+  }
+  const installer = readFileSync(path.join(root, "instalar-valkiria.cmd"), "ascii");
+  assert.equal(installer.split("\r\n").filter((l) => l.startsWith("###PS")).length, 1, "exactly one marker line");
+  assert.ok(!installer.split("###PS")[0].includes("$ErrorActionPreference"), "PowerShell code lives after the marker");
+  assert.match(installer, /IndexOf\('#'\+'##PS'\)/, "the cmd part finds the marker without containing it literally");
+  const repos = new Set();
+  for (const f of ["instalar-valkiria.cmd", "tools/windows/actualizador/actualizar.ps1", "extension/src/popup/popup.js"]) {
+    const m = readFileSync(path.join(root, f), "utf8").match(/(?:\$Repo = '|const REPO = ")([\w.-]+\/[\w.-]+)/);
+    assert.ok(m, f + " names the repository");
+    repos.add(m[1]);
+  }
+  assert.deepEqual([...repos], ["Marquitomeschini/valkiria"]);
+  const updater = readFileSync(path.join(root, "tools/windows/actualizador/actualizar.ps1"), "ascii");
+  assert.match(updater, /\.Content \| ConvertFrom-Json\)\.version/, "raw.githubusercontent.com serves text/plain: parse it");
+  assert.ok(!/\$args\s*=/.test(installer + updater), "$args is reserved in PowerShell");
+});
