@@ -5,6 +5,8 @@ import { readFileSync } from "node:fs";
 import vm from "node:vm";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const ext = path.join(here, "..", "extension", "src");
@@ -575,4 +577,11 @@ test("saved profiles (newest first, at most 40) and collections", async () => {
   assert.deepEqual(plain((await col.all())["Ideas de hooks"].items.map((i) => i.id)), ["2", "3"]);
   await col.removeCollection("Outfits");
   assert.deepEqual(plain(await col.names()), ["Ideas de hooks"]);
+});
+
+test("the shareable zip carries the current installer and the guide", () => {
+  const root = path.join(here, "..");
+  const out = execFileSync("python3", ["-I", "-c", "import sys,zipfile,hashlib; z=zipfile.ZipFile(sys.argv[1]); print('\\n'.join(n+' '+hashlib.sha256(z.read(n)).hexdigest() for n in sorted(z.namelist())))", path.join(root, "compartir/Valkiria-instalador.zip")], { encoding: "utf8" }).trim().split("\n");
+  const sha = (f) => createHash("sha256").update(readFileSync(path.join(root, f))).digest("hex");
+  assert.deepEqual(out, ["LEEME.txt " + sha("compartir/LEEME.txt"), "instalar-valkiria.cmd " + sha("instalar-valkiria.cmd")], "rebuild compartir/Valkiria-instalador.zip after changing the installer or the guide");
 });

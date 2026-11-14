@@ -12,6 +12,10 @@ Es de uso personal: no está publicada en la Chrome Web Store, así que se insta
 
 ## Instalación en Windows: instalador de un clic (recomendado)
 
+> **Para pasársela a otra persona:** mandale
+> [`compartir/Valkiria-instalador.zip`](https://github.com/Marquitomeschini/valkiria/raw/main/compartir/Valkiria-instalador.zip).
+> Trae el instalador y un `LEEME.txt` con el paso a paso.
+
 1. Descargá **`instalar-valkiria.cmd`** (está en la raíz del repositorio:
    <https://github.com/Marquitomeschini/valkiria>).
 2. Hacé doble clic. Si Windows muestra "Windows protegió su PC", tocá **Más información** →

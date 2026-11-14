@@ -80,24 +80,36 @@ try {
   Remove-Item -Force $xmlFile -ErrorAction SilentlyContinue
   if ($ok) { Write-Host '       Listo.' } else { Write-Host '       No se pudo crear la tarea. Valkiria funciona igual, pero no se va a actualizar sola.' }
 
-  Write-Host '  3/3  Abriendo brave://extensions...'
-  Set-Clipboard -Value $Ext
-  $brave = @(
-    (Join-Path $env:ProgramFiles 'BraveSoftware\Brave-Browser\Application\brave.exe'),
-    (Join-Path ${env:ProgramFiles(x86)} 'BraveSoftware\Brave-Browser\Application\brave.exe'),
-    (Join-Path $env:LOCALAPPDATA 'BraveSoftware\Brave-Browser\Application\brave.exe')
-  ) | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
-  if ($brave) { try { Start-Process -FilePath $brave -ArgumentList 'brave://extensions' } catch {} }
+  Write-Host '  3/3  Abriendo el navegador...'
+  try { Set-Clipboard -Value $Ext } catch {}
+  # First of Brave, Chrome, Edge that is installed (instructions for Brave if none is found).
+  $roots = @($env:ProgramFiles, ${env:ProgramFiles(x86)}, $env:LOCALAPPDATA) | Where-Object { $_ }
+  $browsers = @(
+    @{ Name = 'Brave';  Exe = 'BraveSoftware\Brave-Browser\Application\brave.exe'; Url = 'brave://extensions';  Load = 'Cargar descomprimida' },
+    @{ Name = 'Chrome'; Exe = 'Google\Chrome\Application\chrome.exe';              Url = 'chrome://extensions'; Load = 'Cargar descomprimida' },
+    @{ Name = 'Edge';   Exe = 'Microsoft\Edge\Application\msedge.exe';             Url = 'edge://extensions';   Load = 'Cargar desempaquetada' }
+  )
+  $found = $null
+  foreach ($b in $browsers) {
+    foreach ($r in $roots) {
+      $p = Join-Path $r $b.Exe
+      if (Test-Path $p) { $found = $b; $found.Path = $p; break }
+    }
+    if ($found) { break }
+  }
+  if (-not $found) { $found = $browsers[0] }
+  if ($found.Path) { try { Start-Process -FilePath $found.Path -ArgumentList $found.Url } catch {} }
 
   Write-Host ''
   Write-Host '  ================================================================'
-  Write-Host '   FALTA UN SOLO PASO, EN BRAVE (se hace una vez):'
+  Write-Host "   FALTA UN SOLO PASO, EN $($found.Name.ToUpper()) (se hace una vez):"
   Write-Host ''
-  Write-Host '   1. En brave://extensions, activa "Modo de desarrollador".'
-  Write-Host '   2. Si tenes otra Valkiria o FeedOrden cargada, toca "Quitar".'
-  Write-Host '   3. Toca "Cargar descomprimida". En la ventana, hace clic en la'
+  Write-Host "   1. Entra a $($found.Url) y activa ""Modo de desarrollador""."
+  Write-Host '   2. Si tenes otra Valkiria (o FeedOrden) cargada, toca "Quitar".'
+  Write-Host "   3. Toca ""$($found.Load)"". En la ventana, hace clic en la"
   Write-Host '      barra de arriba (donde dice la carpeta), pega con Ctrl+V,'
   Write-Host '      apreta Enter y toca "Seleccionar carpeta".'
+  Write-Host '   4. Fija el icono: pieza de rompecabezas -> pin al lado de Valkiria.'
   Write-Host ''
   Write-Host "   La ruta ya esta copiada: $Ext"
   Write-Host '  ================================================================'

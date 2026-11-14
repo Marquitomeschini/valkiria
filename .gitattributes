@@ -3,5 +3,7 @@
 *.vbs text eol=crlf
 *.ps1 text eol=crlf
 *.png binary
+*.zip binary
+compartir/*.txt text eol=crlf
 # This fixture is a raw HTTP body that must keep its CRLF line breaks.
 test/fixtures/facebook_timeline.txt -text

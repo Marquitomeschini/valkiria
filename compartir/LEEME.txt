@@ -1,0 +1,118 @@
+﻿VALKIRIA - CÓMO INSTALARLA (WINDOWS)
+====================================
+
+Valkiria es una extensión para Brave, Chrome o Edge que ordena las
+publicaciones de Instagram, TikTok, X y Facebook por vistas, likes,
+comentarios, vistas por día y más. También exporta a Excel y descarga
+los videos y fotos.
+
+Necesitás: Windows 10 u 11, internet y Brave, Chrome o Edge.
+Tarda unos 5 minutos y se hace una sola vez.
+
+
+INSTALACIÓN PASO A PASO
+-----------------------
+
+1. Descomprimí este zip: clic derecho sobre el archivo -> "Extraer todo"
+   -> "Extraer".
+
+2. Doble clic en "instalar-valkiria.cmd".
+   Si aparece "Windows protegió su PC": tocá "Más información" y después
+   "Ejecutar de todas formas". Pasa con cualquier archivo descargado de
+   internet que no sea de una empresa conocida.
+
+3. Se abre una ventana negra que muestra 3 pasos (descargar, activar las
+   actualizaciones y abrir el navegador). Al final dice
+   "FALTA UN SOLO PASO". Dejala abierta para leer las instrucciones.
+
+4. El navegador se abre solo en la página de extensiones. Si no se abre,
+   escribí en la barra de direcciones:
+     Brave:  brave://extensions
+     Chrome: chrome://extensions
+     Edge:   edge://extensions
+
+5. Activá "Modo de desarrollador" (arriba a la derecha; en Edge está
+   abajo a la izquierda).
+
+6. Tocá "Cargar descomprimida" (en Edge: "Cargar desempaquetada").
+   En la ventana que se abre:
+   - hacé clic en la barra de arriba, donde dice el nombre de la carpeta,
+   - pegá con Ctrl+V (el instalador ya copió la ruta),
+   - apretá Enter,
+   - tocá "Seleccionar carpeta".
+   La carpeta es C:\Users\<tu usuario>\Valkiria\extension
+
+7. Fijá el ícono: tocá la pieza de rompecabezas (arriba a la derecha del
+   navegador) y después el pin al lado de "Valkiria". Aparece un escudo
+   azul con una flecha dorada.
+
+8. Si tenías abiertas pestañas de Instagram, TikTok, X o Facebook,
+   recargalas (F5).
+
+
+CÓMO SE USA
+-----------
+
+1. Entrá a un perfil (por ejemplo, la pestaña de reels de una cuenta de
+   Instagram), a una búsqueda o a un hashtag.
+2. Tocá el escudo de Valkiria.
+3. Elegí qué publicaciones entran (todas, las últimas 100, las del
+   último mes...) y tocá cómo ordenarlas: Vistas, Likes, Vistas por
+   día, etc.
+4. La página se pone borrosa mientras carga: no hagas scroll. Cuando
+   termina aparecen los resultados ordenados, con:
+   - Grilla, Tabla y Resumen (gráficos: mejor día y hora para publicar,
+     hashtags que mejor rinden...).
+   - Exportar (Excel, Google Sheets, CSV, JSON).
+   - Descargar (videos y fotos, a la carpeta Descargas\Valkiria).
+   - Seleccionar, para exportar, descargar o guardar solo algunas.
+5. "Colecciones y comparar" abre una página para comparar perfiles y
+   ver las publicaciones que guardaste.
+
+
+ACTUALIZACIONES
+---------------
+
+Son automáticas: cada 15 minutos busca una versión nueva y se instala
+sola. Cuando se actualiza, el escudo muestra "NEW": recargá las pestañas
+de las redes.
+
+Las versiones nuevas vienen de github.com/Marquitomeschini/valkiria.
+
+En la carpeta C:\Users\<tu usuario>\Valkiria hay dos accesos:
+- "Actualizar ahora": busca una versión nueva en el momento.
+- "Desactivar actualizaciones": deja de actualizarse sola.
+
+
+SI ALGO NO ANDA
+---------------
+
+- La ventana negra dice ERROR: revisá la conexión a internet y volvé a
+  ejecutar instalar-valkiria.cmd.
+- No aparece "Cargar descomprimida": falta activar "Modo de
+  desarrollador".
+- El navegador dice "Falta el archivo de manifiesto": elegiste otra
+  carpeta. Tiene que ser Valkiria\extension.
+- El escudo dice "Abrí un perfil...": recargá la pestaña de la red.
+- Al abrir el navegador aparece un aviso sobre extensiones en modo de
+  desarrollador: es normal. Cerralo sin tocar "Inhabilitar".
+
+
+PARA DESINSTALAR
+----------------
+
+1. Doble clic en "Desactivar actualizaciones", dentro de
+   C:\Users\<tu usuario>\Valkiria.
+2. En la página de extensiones del navegador, tocá "Quitar" en Valkiria.
+3. Borrá la carpeta C:\Users\<tu usuario>\Valkiria.
+
+
+PRIVACIDAD Y CUIDADOS
+---------------------
+
+- Valkiria no manda tus datos a ningún servidor: todo queda en tu
+  navegador.
+- Usala con moderación: si cargás miles de publicaciones seguidas, la
+  red puede frenarte un rato (Valkiria se pausa sola si eso pasa).
+- Los videos y fotos de otras personas tienen derechos de autor:
+  descargalos solo para uso personal.
