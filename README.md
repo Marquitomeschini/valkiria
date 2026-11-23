@@ -44,6 +44,35 @@ abiertas.
 - Si alguna vez la extensión no se recarga sola, tocá **recargar** en su tarjeta en
   `brave://extensions`.
 
+## Instalación en Mac
+
+> **Para pasársela a alguien con Mac:** mandale
+> [`compartir/Valkiria-instalador-mac.zip`](https://github.com/Marquitomeschini/valkiria/raw/main/compartir/Valkiria-instalador-mac.zip),
+> con el instalador y un `LEEME.txt` con el paso a paso.
+
+1. **Ejecutá el instalador.** La forma más simple: abrí la Terminal (Cmd+Espacio, "Terminal") y
+   pegá:
+
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/Marquitomeschini/valkiria/main/instalar-valkiria-mac.command | bash
+   ```
+
+   También podés hacer doble clic en `instalar-valkiria.command` del zip. macOS lo bloquea la
+   primera vez porque no es de un desarrollador registrado:
+   - **macOS 14 o anterior:** clic derecho → **Abrir** → **Abrir**.
+   - **macOS 15 o posterior:** doble clic, tocá **Listo**, y después  → Configuración del
+     Sistema → Privacidad y seguridad → **Abrir igualmente**.
+2. El instalador baja Valkiria a la carpeta `Valkiria` de tu usuario, activa las actualizaciones
+   automáticas (un agente de macOS que revisa cada 15 minutos), copia la ruta de la extensión y
+   abre el navegador. macOS puede avisar "Se agregó un ítem en segundo plano": es el
+   actualizador.
+3. En el navegador: **Modo de desarrollador** → **Cargar descomprimida** → **Cmd+Shift+G** →
+   **Cmd+V** → **Enter** → **Seleccionar**.
+4. Fijá el escudo en la barra.
+
+En la carpeta `Valkiria` quedan "Actualizar ahora" y "Desactivar actualizaciones"; el último
+resultado del actualizador está en `Valkiria/actualizador/ultimo-resultado.txt`.
+
 ## Instalación a mano (otros sistemas o sin el instalador)
 
 ### 1. Guardá la carpeta en un lugar fijo
@@ -305,10 +334,12 @@ instagram.com, tiktok.com, x.com, twitter.com y facebook.com.
 Requiere Node.js 22 o más nuevo. Las pruebas de punta a punta necesitan Playwright con Chromium.
 
 ```bash
-node --test test/unit.test.mjs
+node --test test/unit.test.mjs test/mac-installer.test.mjs
 node test/e2e.mjs
 ```
 
+- `test/mac-installer.test.mjs`: ejecuta el instalador y el actualizador de Mac de verdad, con un
+  servidor local en lugar de GitHub y reemplazos de `launchctl`, `pbcopy` y `open`.
 - `test/unit.test.mjs`: extracción por plataforma, números, fechas, orden, outlier score, filtros
   y las cuatro exportaciones.
 - `test/e2e.mjs`: carga la extensión en Chromium y sirve páginas falsas en las URLs reales de cada

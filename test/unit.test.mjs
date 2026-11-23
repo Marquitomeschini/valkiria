@@ -585,3 +585,13 @@ test("the shareable zip carries the current installer and the guide", () => {
   const sha = (f) => createHash("sha256").update(readFileSync(path.join(root, f))).digest("hex");
   assert.deepEqual(out, ["LEEME.txt " + sha("compartir/LEEME.txt"), "instalar-valkiria.cmd " + sha("instalar-valkiria.cmd")], "rebuild compartir/Valkiria-instalador.zip after changing the installer or the guide");
 });
+
+test("the Mac zip carries the current installer (executable) and the Mac guide", () => {
+  const root = path.join(here, "..");
+  const out = execFileSync("python3", ["-I", "-c", "import sys,zipfile,hashlib; z=zipfile.ZipFile(sys.argv[1]); print('\\n'.join(i.filename+' '+oct(i.external_attr>>16)+' '+hashlib.sha256(z.read(i)).hexdigest() for i in sorted(z.infolist(), key=lambda i: i.filename)))", path.join(root, "compartir/Valkiria-instalador-mac.zip")], { encoding: "utf8" }).trim().split("\n");
+  const sha = (f) => createHash("sha256").update(readFileSync(path.join(root, f))).digest("hex");
+  assert.deepEqual(out, ["LEEME.txt 0o100644 " + sha("compartir/LEEME-MAC.txt"), "instalar-valkiria.command 0o100755 " + sha("instalar-valkiria-mac.command")], "rebuild compartir/Valkiria-instalador-mac.zip after changing the Mac installer or guide");
+  const sh = readFileSync(path.join(root, "instalar-valkiria-mac.command"), "utf8");
+  assert.ok(!sh.includes("\r"), "Unix line endings");
+  assert.match(sh, /REPO="Marquitomeschini\/valkiria"/);
+});

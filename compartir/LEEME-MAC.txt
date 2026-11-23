@@ -1,0 +1,143 @@
+VALKIRIA - CÓMO INSTALARLA (MAC)
+================================
+
+Valkiria es una extensión para Brave, Chrome o Edge que ordena las
+publicaciones de Instagram, TikTok, X y Facebook por vistas, likes,
+comentarios, vistas por día y más. También exporta a Excel y descarga
+los videos y fotos.
+
+Necesitás: una Mac, internet y Brave, Chrome o Edge.
+Tarda unos 5 minutos y se hace una sola vez.
+
+
+PASO 1: EJECUTAR EL INSTALADOR
+------------------------------
+
+Elegí una de estas dos formas.
+
+OPCIÓN A (la más simple): pegar un comando en la Terminal
+
+  1. Apretá Cmd+Espacio, escribí "Terminal" y apretá Enter.
+  2. Copiá esta línea entera, pegala en la Terminal con Cmd+V y apretá
+     Enter:
+
+     curl -fsSL https://raw.githubusercontent.com/Marquitomeschini/valkiria/main/instalar-valkiria-mac.command | bash
+
+OPCIÓN B: doble clic en "instalar-valkiria.command" (está en este zip)
+
+  macOS bloquea los programas descargados que no son de un desarrollador
+  registrado, así que la primera vez hay que autorizarlo:
+
+  - macOS 14 (Sonoma) o anterior: hacé clic derecho (o Control+clic)
+    sobre "instalar-valkiria.command" -> "Abrir" -> "Abrir".
+
+  - macOS 15 (Sequoia) o posterior: hacé doble clic; aparece un aviso,
+    tocá "Listo". Después andá a  -> Configuración del Sistema ->
+    Privacidad y seguridad, bajá hasta el final y tocá "Abrir
+    igualmente" al lado de "instalar-valkiria.command". Confirmá con tu
+    contraseña y tocá "Abrir igualmente" otra vez.
+
+Cualquiera de las dos abre la Terminal y muestra 3 pasos (descargar,
+activar las actualizaciones y abrir el navegador). Al final dice
+"FALTA UN SOLO PASO".
+
+Puede aparecer un aviso de macOS: "Se agregó un ítem en segundo plano"
+("bash"). Es normal: es el actualizador automático de Valkiria.
+
+
+PASO 2: CARGARLA EN EL NAVEGADOR
+--------------------------------
+
+1. El navegador se abre solo. Si no, escribí en la barra de direcciones:
+     Brave:  brave://extensions
+     Chrome: chrome://extensions
+     Edge:   edge://extensions
+
+2. Activá "Modo de desarrollador" (arriba a la derecha; en Edge está
+   abajo a la izquierda).
+
+3. Tocá "Cargar descomprimida" (en Edge: "Cargar desempaquetada").
+   En la ventana que se abre:
+   - apretá Cmd+Shift+G,
+   - pegá con Cmd+V (el instalador ya copió la ruta),
+   - apretá Enter,
+   - tocá "Seleccionar".
+   La carpeta es la carpeta "Valkiria" de tu usuario, adentro "extension".
+
+4. Fijá el ícono: tocá la pieza de rompecabezas (arriba a la derecha del
+   navegador) y después el pin al lado de "Valkiria". Aparece un escudo
+   azul con una flecha dorada.
+
+5. Si tenías abiertas pestañas de Instagram, TikTok, X o Facebook,
+   recargalas (Cmd+R).
+
+
+CÓMO SE USA
+-----------
+
+1. Entrá a un perfil (por ejemplo, la pestaña de reels de una cuenta de
+   Instagram), a una búsqueda o a un hashtag.
+2. Tocá el escudo de Valkiria.
+3. Elegí qué publicaciones entran (todas, las últimas 100, las del
+   último mes...) y tocá cómo ordenarlas: Vistas, Likes, Vistas por
+   día, etc.
+4. La página se pone borrosa mientras carga: no hagas scroll. Cuando
+   termina aparecen los resultados ordenados, con:
+   - Grilla, Tabla y Resumen (gráficos: mejor día y hora para publicar,
+     hashtags que mejor rinden...).
+   - Exportar (Excel, Google Sheets, CSV, JSON).
+   - Descargar (videos y fotos, a la carpeta Descargas/Valkiria).
+   - Seleccionar, para exportar, descargar o guardar solo algunas.
+5. "Colecciones y comparar" abre una página para comparar perfiles y
+   ver las publicaciones que guardaste.
+
+
+ACTUALIZACIONES
+---------------
+
+Son automáticas: cada 15 minutos busca una versión nueva y se instala
+sola. Cuando se actualiza, el escudo muestra "NEW": recargá las pestañas
+de las redes.
+
+Las versiones nuevas vienen de github.com/Marquitomeschini/valkiria.
+
+La carpeta "Valkiria" está en tu carpeta de usuario (en el Finder:
+Ir -> Inicio, o Cmd+Shift+H). Adentro hay dos accesos:
+- "Actualizar ahora": busca una versión nueva en el momento.
+- "Desactivar actualizaciones": deja de actualizarse sola.
+Como los creó el instalador, se abren con doble clic sin avisos.
+
+
+SI ALGO NO ANDA
+---------------
+
+- La Terminal dice ERROR: revisá la conexión a internet y volvé a
+  ejecutar el instalador.
+- macOS no deja abrir el instalador: usá la Opción A (Terminal).
+- No aparece "Cargar descomprimida": falta activar "Modo de
+  desarrollador".
+- El navegador dice "Falta el archivo de manifiesto": elegiste otra
+  carpeta. Tiene que ser Valkiria/extension.
+- El escudo dice "Abrí un perfil...": recargá la pestaña de la red.
+- Al abrir el navegador aparece un aviso sobre extensiones en modo de
+  desarrollador: es normal. Cerralo sin tocar "Inhabilitar".
+
+
+PARA DESINSTALAR
+----------------
+
+1. Doble clic en "Desactivar actualizaciones", dentro de la carpeta
+   Valkiria.
+2. En la página de extensiones del navegador, tocá "Quitar" en Valkiria.
+3. Mandá la carpeta Valkiria a la papelera.
+
+
+PRIVACIDAD Y CUIDADOS
+---------------------
+
+- Valkiria no manda tus datos a ningún servidor: todo queda en tu
+  navegador.
+- Usala con moderación: si cargás miles de publicaciones seguidas, la
+  red puede frenarte un rato (Valkiria se pausa sola si eso pasa).
+- Los videos y fotos de otras personas tienen derechos de autor:
+  descargalos solo para uso personal.
